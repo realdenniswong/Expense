@@ -21,7 +21,7 @@ struct TransactionRowView: View {
             ZStack {
                 Circle()
                     .fill(expense.category.color.opacity(0.15))
-                    .frame(width: 44, height: 44)
+                    .frame(width: 48, height: 48)
                 
                 expense.category.icon
                     .font(.system(size: 18, weight: .semibold))
@@ -31,15 +31,36 @@ struct TransactionRowView: View {
             
             // Expense Details
             VStack(alignment: .leading, spacing: 4) {
+
+                
                 Text(expense.description)
-                    .font(.body)
+                    .font(.headline)
                     .fontWeight(.semibold)
                     .lineLimit(1)
                     .truncationMode(.tail)
                 
-                Text(expense.category.rawValue)
-                    .font(.caption)
-                    .fontWeight(.medium)
+                VStack(alignment: .leading, spacing: 0) {
+                    HStack(spacing: 4) {
+                        Text(expense.category.rawValue)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        
+                        Text("•")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        
+                        Text("Cash") // Placeholder payment method
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        
+                        
+                    }
+                    
+                    Text(expense.formattedDate)
+                        .font(.caption)
+                        .fontWeight(.medium)
+                        .foregroundColor(.secondary)
+                }
             }
             
             Spacer()
@@ -47,13 +68,9 @@ struct TransactionRowView: View {
             // Amount and Date
             VStack(alignment: .trailing, spacing: 4) {
                 Text(expense.formattedAmount)
-                    .font(.body)
-                    .fontWeight(.bold)
-                
-                Text(expense.formattedDate)
-                    .font(.caption)
-                    .fontWeight(.medium)
-                    .foregroundColor(.secondary)
+                    .font(.headline)
+                    .fontWeight(.semibold)
+                    .monospacedDigit()
             }
         }
         // Add extra leading padding when in edit mode to give space for the drag handle

@@ -19,12 +19,12 @@ struct Expense: Identifiable, Codable {
     
     
     var formattedAmount: String {
-        return String(format: "$%.2f", amount)
+        return String(format: "HK$%.2f", amount)
     }
     
     var formattedDate: String {
         let formatter = DateFormatter()
-        formatter.dateStyle = .medium
+        formatter.dateFormat = "hh:mm a"
         return formatter.string(from: date)
     }
 }

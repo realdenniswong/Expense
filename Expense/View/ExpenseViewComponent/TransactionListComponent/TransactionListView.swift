@@ -24,7 +24,7 @@ struct TransactionListView: View {
         List {
             ForEach(expenseManager.groupedExpenses, id: \.0) { dateString, expensesForDate in
                 Section(header: Text(dateString)) {
-                    ForEach(expensesForDate) { expense in
+                    ForEach(expensesForDate.sorted(by: { $0.date > $1.date })) { expense in
                         TransactionRowView(expense: expense)
                             .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                                 deleteSwipeButton(for: expense)

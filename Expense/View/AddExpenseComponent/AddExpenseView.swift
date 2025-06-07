@@ -96,7 +96,7 @@ struct AddExpenseView: View {
                 
                 // Date
                 Section {
-                    DatePicker("Date", selection: $selectedDate, displayedComponents: .date)
+                    DatePicker("Date and time", selection: $selectedDate, displayedComponents: [.date, .hourAndMinute])
                         .datePickerStyle(.graphical)
                         .padding(.vertical, 8)
                 }
