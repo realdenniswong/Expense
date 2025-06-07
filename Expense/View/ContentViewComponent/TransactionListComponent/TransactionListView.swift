@@ -8,25 +8,17 @@
 import SwiftUI
 
 struct TransactionListView: View {
-    @State private var expenses: [Expense] = dummyExpenses
+    //@State private var expenses: [Expense] = dummyExpenses
+    @ObservedObject var expenseManager: ExpenseManager
+    var expenses: [Expense] = []
     @Environment(\.editMode) private var editMode
     
-    // Group expenses by date
-    private var groupedExpenses: [(String, [Expense])] {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateStyle = .medium
-        dateFormatter.timeStyle = .none
-        
-        let grouped = Dictionary(grouping: expenses) { expense in
-            dateFormatter.string(from: expense.date)
-        }
-        
-        // Sort by date (most recent first)
-        return grouped.sorted { first, second in
-            let firstDate = expenses.first { dateFormatter.string(from: $0.date) == first.key }?.date ?? Date.distantPast
-            let secondDate = expenses.first { dateFormatter.string(from: $0.date) == second.key }?.date ?? Date.distantPast
-            return firstDate > secondDate
-        }
+    @Binding var editingExpense: Expense?
+    
+    init(expenseManager: ExpenseManager, editingExpense: Binding<Expense?>) {
+        self.expenseManager = expenseManager
+        expenses = expenseManager.expenses
+        self._editingExpense = editingExpense
     }
     
     private var isEditing: Bool {
@@ -35,13 +27,17 @@ struct TransactionListView: View {
     
     var body: some View {
         List {
-            ForEach(groupedExpenses, id: \.0) { dateString, expensesForDate in
+            ForEach(expenseManager.groupedExpenses, id: \.0) { dateString, expensesForDate in
                 Section(header: Text(dateString)) {
                     ForEach(expensesForDate) { expense in
                         TransactionRowView(expense: expense)
+                            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                                deleteSwipeButton(for: expense)
+                                editSwipeButton(for: expense)
+                            }
                     }
                     .onMove(perform: isEditing ? { source, destination in
-                        moveExpenses(in: dateString, from: source, to: destination)
+                        expenseManager.moveExpenses(in: dateString, from: source, to: destination)
                     } : nil)
                 }
             }
@@ -51,37 +47,27 @@ struct TransactionListView: View {
         .background(Color(UIColor.systemGroupedBackground))
     }
     
-    private func moveExpenses(in dateString: String, from source: IndexSet, to destination: Int) {
-        // Find the expenses for this date
-        guard let sectionIndex = groupedExpenses.firstIndex(where: { $0.0 == dateString }) else { return }
-        
-        var expensesForDate = groupedExpenses[sectionIndex].1
-        expensesForDate.move(fromOffsets: source, toOffset: destination)
-        
-        // Update the main expenses array
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateStyle = .medium
-        dateFormatter.timeStyle = .none
-        
-        // Remove old expenses for this date
-        expenses.removeAll { expense in
-            dateFormatter.string(from: expense.date) == dateString
+    private func deleteSwipeButton(for expense: Expense) -> some View {
+        Button(role: .destructive) {
+            expenseManager.deleteExpenses(expense)
+        } label: {
+            Label("Delete", systemImage: "trash")
         }
-        
-        // Add back the reordered expenses
-        expenses.append(contentsOf: expensesForDate)
-        
-        // Update order property for consistency
-        for (index, _) in expenses.enumerated() {
-            expenses[index].order = index
-        }
-        
-        // Sort expenses to maintain date grouping
-        expenses.sort { $0.date > $1.date }
     }
+    
+    private func editSwipeButton(for expense: Expense) -> some View {
+        Button {
+            editingExpense = expense
+        } label: {
+            Label("Edit", systemImage: "pencil")
+        }
+        .tint(.blue)
+    }
+    
 }
 
 // Sample data for testing
+/*
 private let dummyExpenses: [Expense] = [
     Expense(
         id: UUID(),
@@ -132,3 +118,4 @@ private let dummyExpenses: [Expense] = [
         order: 5
     )
 ]
+*/

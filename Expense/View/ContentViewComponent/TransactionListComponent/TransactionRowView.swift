@@ -23,7 +23,7 @@ struct TransactionRowView: View {
                     .fill(expense.category.color.opacity(0.15))
                     .frame(width: 44, height: 44)
                 
-                Image(systemName: expense.category.icon)
+                expense.category.icon
                     .font(.system(size: 18, weight: .semibold))
                     .foregroundColor(expense.category.color)
             }

@@ -8,47 +8,64 @@
 import SwiftUI
 
 struct ContentView: View {
-    @StateObject private var expenseStore = ExpenseStore()
-    @State private var showingAddExpense = false
-    @State private var editingExpense: Expense? = nil
+    @State private var selectedTab = 0
     
     var body: some View {
-        NavigationStack{
-            VStack{
-                SummaryView(totalExpenses: expenseManager.totalExpenses)
-                TransactionListView(expenseManager: self.expenseManager, editingExpense: $editingExpense)
+        TabView(selection: $selectedTab) {
+            // Home Tab
+            NavigationStack {
+                VStack {
+                    ExpenseView()
+                }
+                .navigationTitle("Expense")
+                .navigationBarTitleDisplayMode(.large)
             }
-            .background(Color(.systemGroupedBackground).ignoresSafeArea())
-            .navigationTitle("Expenses")
-            .navigationBarTitleDisplayMode(.large)
+            .tabItem {
+                Image(systemName: "banknote")
+                Text("Expense")
+            }
+            .tag(0)
             
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    EditButton()
+            // Browse Tab
+            NavigationStack {
+                VStack {
+                    Text("Overview")
+                        .font(.largeTitle)
+                        .fontWeight(.bold)
+                        .padding()
+                    
+                    Spacer()
                 }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    addExpenseButton
+                .navigationTitle("Overview")
+                .navigationBarTitleDisplayMode(.large)
+            }
+            .tabItem {
+                Image(systemName: "chart.pie")
+                Text("Browse")
+            }
+            .tag(1)
+            
+            // Library Tab
+            NavigationStack {
+                VStack {
+                    Text("Setting")
+                        .font(.largeTitle)
+                        .fontWeight(.bold)
+                        .padding()
+                    
+                    Spacer()
                 }
+                .navigationTitle("Setting")
+                .navigationBarTitleDisplayMode(.large)
             }
-            // When creating a transaction
-            .sheet(isPresented: $showingAddExpense) {
-                AddExpenseView(expenseStore: expenseStore)
+            .tabItem {
+                Image(systemName: "gear")
+                Text("Setting")
             }
-            // When editing a transaction
-            .sheet(item: $editingExpense) { expense in
-                // AddExpenseView(expenseStore: expenseStore, expenseToEdit: expense)
-            }
+            .tag(2)
+            
         }
-    }
-    
-    private var addExpenseButton: some View {
-        Button(action: {
-            showingAddExpense = true
-        }) {
-            Image(systemName: "plus")
-                .font(.title2)
-                .fontWeight(.medium)
-        }
+        .tint(.blue) // Tab bar accent color
     }
 }
 
