@@ -41,7 +41,7 @@ struct ContentView: View {
             }
             .tabItem {
                 Image(systemName: "chart.pie")
-                Text("Browse")
+                Text("Overview")
             }
             .tag(1)
             

@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct ExpenseView: View {
+struct ExpensesView: View {
     @StateObject private var expenseManager = ExpenseManager()
     @State private var showingAddExpense = false
     @State private var editingExpense: Expense? = nil
@@ -15,7 +15,7 @@ struct ExpenseView: View {
     var body: some View {
         NavigationStack {
             VStack {
-                SummaryView(totalExpenses: expenseManager.totalExpenses)
+                TotalExpensesView(totalExpenses: expenseManager.totalExpenses)
                 TransactionListView(expenseManager: self.expenseManager, editingExpense: $editingExpense)
             }
             .padding(.bottom, 50) // padding to avoid overlap with footer
