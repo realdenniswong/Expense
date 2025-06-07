@@ -21,9 +21,6 @@ struct ExpensesView: View {
             .padding(.bottom, 50) // padding to avoid overlap with footer
             .background(Color(.systemGroupedBackground))
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    EditButton()
-                }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     addExpenseButton
                 }

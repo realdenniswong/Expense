@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct SummaryView: View {
+struct TotalExpensesView: View {
     @Environment(\.colorScheme) private var colorScheme
     let totalExpenses: Double
     

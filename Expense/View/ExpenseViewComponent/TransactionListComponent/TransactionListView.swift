@@ -11,7 +11,6 @@ struct TransactionListView: View {
     //@State private var expenses: [Expense] = dummyExpenses
     @ObservedObject var expenseManager: ExpenseManager
     var expenses: [Expense] = []
-    @Environment(\.editMode) private var editMode
     
     @Binding var editingExpense: Expense?
     
@@ -19,10 +18,6 @@ struct TransactionListView: View {
         self.expenseManager = expenseManager
         expenses = expenseManager.expenses
         self._editingExpense = editingExpense
-    }
-    
-    private var isEditing: Bool {
-        editMode?.wrappedValue.isEditing == true
     }
     
     var body: some View {
@@ -36,9 +31,6 @@ struct TransactionListView: View {
                                 editSwipeButton(for: expense)
                             }
                     }
-                    .onMove(perform: isEditing ? { source, destination in
-                        expenseManager.moveExpenses(in: dateString, from: source, to: destination)
-                    } : nil)
                 }
             }
         }

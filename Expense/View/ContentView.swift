@@ -15,7 +15,7 @@ struct ContentView: View {
             // Home Tab
             NavigationStack {
                 VStack {
-                    ExpenseView()
+                    ExpensesView()
                 }
                 .navigationTitle("Expense")
                 .navigationBarTitleDisplayMode(.large)
@@ -63,14 +63,10 @@ struct ContentView: View {
                 Text("Setting")
             }
             .tag(2)
-            
         }
-        .tint(.blue) // Tab bar accent color
     }
 }
 
-
-
-#Preview {
-    ContentView()
-}
+// #Preview {
+//    ContentView()
+// }
