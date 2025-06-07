@@ -2,7 +2,7 @@
 
 A modern iOS expense tracking app built with SwiftUI, featuring an Apple-native design and intuitive user experience.
 
-## 🎨 Design
+## Design
 
 - **Apple-Native UI** - Follows iOS design guidelines and patterns
 - **Apple Wallet Inspired** - Clean, modern transaction list design
