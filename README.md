@@ -1,4 +1,4 @@
-# Expense Tracker
+# Expense
 
 A modern iOS expense tracking app built with SwiftUI, featuring an Apple-native design and intuitive user experience.
 
