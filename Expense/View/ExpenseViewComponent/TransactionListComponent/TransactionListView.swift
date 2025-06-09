@@ -8,21 +8,13 @@
 import SwiftUI
 
 struct TransactionListView: View {
-    //@State private var expenses: [Expense] = dummyExpenses
-    @ObservedObject var expenseManager: ExpenseManager
-    var expenses: [Expense] = []
-    
+    let groupedExpenses: [(String, [Expense])]
     @Binding var editingExpense: Expense?
-    
-    init(expenseManager: ExpenseManager, editingExpense: Binding<Expense?>) {
-        self.expenseManager = expenseManager
-        expenses = expenseManager.expenses
-        self._editingExpense = editingExpense
-    }
+    @Environment(\.modelContext) private var modelContext
     
     var body: some View {
         List {
-            ForEach(expenseManager.groupedExpenses, id: \.0) { dateString, expensesForDate in
+            ForEach(groupedExpenses, id: \.0) { dateString, expensesForDate in
                 Section(header: Text(dateString)) {
                     ForEach(expensesForDate.sorted(by: { $0.date > $1.date })) { expense in
                         TransactionRowView(expense: expense)
@@ -41,7 +33,7 @@ struct TransactionListView: View {
     
     private func deleteSwipeButton(for expense: Expense) -> some View {
         Button(role: .destructive) {
-            expenseManager.deleteExpenses(expense)
+            deleteExpense(expense)
         } label: {
             Label("Delete", systemImage: "trash")
         }
@@ -54,6 +46,13 @@ struct TransactionListView: View {
             Label("Edit", systemImage: "pencil")
         }
         .tint(.blue)
+    }
+    
+    private func deleteExpense(_ expense: Expense) {
+        modelContext.delete(expense)
+        
+        // Save the context (optional - SwiftData auto-saves, but this ensures immediate persistence)
+        try? modelContext.save()
     }
     
 }

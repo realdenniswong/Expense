@@ -7,18 +7,16 @@
 import SwiftUI
 
 struct AddExpenseView: View {
-    @ObservedObject var expenseManager: ExpenseManager
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var modelContext
     let expenseToEdit: Expense?
     
-    init(expenseManager: ExpenseManager) {
-        self.expenseManager = expenseManager
+    init() {
         self.expenseToEdit = nil
     }
     
     // Initializer for editing existing expense
-    init(expenseManager: ExpenseManager, expenseToEdit: Expense) {
-        self.expenseManager = expenseManager
+    init(expenseToEdit: Expense) {
         self.expenseToEdit = expenseToEdit
     }
     
@@ -135,29 +133,28 @@ struct AddExpenseView: View {
         guard let amountValue = Double(amount) else { return }
         
         if let existingExpense = expenseToEdit {
-            // Update existing expense - keep the same order
-            let updatedExpense = Expense(
-                id: existingExpense.id,
-                description: description.isEmpty ? "Untitled" : description,
-                amount: amountValue,
-                category: selectedCategory,
-                date: selectedDate,
-                order: existingExpense.order, // Keep existing order
-                method: selectedPayment
-            )
-            expenseManager.updateExpense(updatedExpense)
+            // Update existing expense - SwiftData automatically saves changes to @Model objects
+            existingExpense.expenseDescription = description.isEmpty ? "Untitled" : description
+            existingExpense.amount = amountValue
+            existingExpense.category = selectedCategory
+            existingExpense.date = selectedDate
+            existingExpense.method = selectedPayment
+            
+            // Optional: Explicitly save (SwiftData auto-saves, but this ensures immediate persistence)
+            try? modelContext.save()
         } else {
-            // Create new expense - order will be assigned by the store
+            // Create new expense
             let newExpense = Expense(
-                id: UUID(),
                 description: description.isEmpty ? "Untitled" : description,
                 amount: amountValue,
                 category: selectedCategory,
                 date: selectedDate,
-                order: 0,  // Placeholder - will be set by addExpense
+                order: Int(Date().timeIntervalSince1970), // Use timestamp as order for new expenses
                 method: selectedPayment
             )
-            expenseManager.addExpense(newExpense)
+            
+            modelContext.insert(newExpense)
+            try? modelContext.save()
         }
 
         dismiss()
