@@ -29,12 +29,7 @@ struct ContentView: View {
             // Browse Tab
             NavigationStack {
                 VStack {
-                    Text("Overview")
-                        .font(.largeTitle)
-                        .fontWeight(.bold)
-                        .padding()
-                    
-                    Spacer()
+                    OverviewView()
                 }
                 .navigationTitle("Overview")
                 .navigationBarTitleDisplayMode(.large)

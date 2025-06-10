@@ -43,7 +43,7 @@ struct TotalExpensesView: View {
                 .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 2)
         )
         // Use dynamic padding that matches insetGrouped lists across devices
-        .padding(.horizontal, horizontalPadding)
+        // .padding(.horizontal, horizontalPadding)
         .padding(.top, 8)
         .padding(.bottom, 8)
     }

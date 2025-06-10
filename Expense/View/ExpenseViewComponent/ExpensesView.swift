@@ -23,10 +23,10 @@ struct ExpensesView: View {
                 EmptyStateView()
             } else {
                 VStack {
-                    TotalExpensesView(totalExpenses: viewModel.totalExpenses(for: expenses))
+                    //TotalExpensesView(totalExpenses: viewModel.totalExpenses(for: expenses))
                     TransactionListView(groupedExpenses: viewModel.groupedExpenses(for: expenses), editingExpense: $editingExpense)
                 }
-                .padding(.bottom, 50) // padding to avoid overlap with footer
+                // .padding(.bottom, 50) // padding to avoid overlap with footer
             }
         }
         .background(Color(.systemGroupedBackground))
