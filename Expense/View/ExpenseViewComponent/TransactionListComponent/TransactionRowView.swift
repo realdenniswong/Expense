@@ -67,7 +67,7 @@ struct TransactionRowView: View {
             
             // Amount and Date
             VStack(alignment: .trailing, spacing: 4) {
-                Text(expense.date.timeString)
+                Text(expense.amountInCents.currencyString(symbol: "HK$"))
                     .font(.headline)
                     .fontWeight(.semibold)
                     .monospacedDigit()

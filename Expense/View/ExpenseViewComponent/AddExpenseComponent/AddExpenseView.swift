@@ -163,7 +163,6 @@ struct AddExpenseView: View {
                 amountInCents: amountInCents,
                 category: selectedCategory,
                 date: selectedDate,
-                order: Int(Date().timeIntervalSince1970), // Use timestamp as order for new expenses
                 method: selectedPayment
             )
             
