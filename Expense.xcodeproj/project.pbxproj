@@ -29,7 +29,28 @@
 		ADA607F42DECD75F00DD6065 /* ExpenseUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ExpenseUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		ADA18C262DF9A00D00A6D4A2 /* Exceptions for "Screenshots" folder in "Expense" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				add_expense.png,
+				edit_expense.png,
+				expense.png,
+				overview.png,
+			);
+			target = ADA607DC2DECD75D00DD6065 /* Expense */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		ADA18C222DF99FF500A6D4A2 /* Screenshots */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				ADA18C262DF9A00D00A6D4A2 /* Exceptions for "Screenshots" folder in "Expense" target */,
+			);
+			path = Screenshots;
+			sourceTree = "<group>";
+		};
 		ADA607DF2DECD75D00DD6065 /* Expense */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = Expense;
@@ -75,6 +96,7 @@
 		ADA607D42DECD75D00DD6065 = {
 			isa = PBXGroup;
 			children = (
+				ADA18C222DF99FF500A6D4A2 /* Screenshots */,
 				ADA607DF2DECD75D00DD6065 /* Expense */,
 				ADA607ED2DECD75F00DD6065 /* ExpenseTests */,
 				ADA607F72DECD75F00DD6065 /* ExpenseUITests */,
@@ -108,6 +130,7 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
+				ADA18C222DF99FF500A6D4A2 /* Screenshots */,
 				ADA607DF2DECD75D00DD6065 /* Expense */,
 			);
 			name = Expense;
