@@ -2,6 +2,20 @@
 
 A modern iOS expense tracking app built with SwiftUI, featuring an Apple-native design and intuitive user experience.
 
+## Screenshots
+
+### Expense
+<div align="left">
+   <img src="https://raw.githubusercontent.com/realdenniswong/Expense/refs/heads/main/Screenshots/expense.png" width="250" alt="Home Screen">
+   <img src="https://raw.githubusercontent.com/realdenniswong/Expense/refs/heads/main/Screenshots/edit_expense.png" width="250" alt="Overview">
+   <img src="https://raw.githubusercontent.com/realdenniswong/Expense/refs/heads/main/Screenshots/add_expense.png" width="250" alt="Overview">
+</div>
+
+### Overview
+<div align="left">
+   <img src="https://raw.githubusercontent.com/realdenniswong/Expense/refs/heads/main/Screenshots/overview.png" width="250" alt="Add Expense">
+</div>
+
 ## Design
 
 - **Apple-Native UI** - Follows iOS design guidelines and patterns
