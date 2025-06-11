@@ -17,22 +17,22 @@ struct OverviewView: View {
     }
     
     private var categorySpendingTotals: [CategorySpending] {
-        Dictionary(grouping: expenses, by: { $0.category })
+        let categoryTotals = Dictionary(grouping: expenses, by: { $0.category })
             .mapValues { expenses in
-                expenses.reduce(0) { $0 + $1.amount }
+                expenses.reduce(0) { $0 + $1.amountInCents }
             }
-            .map { categoryTotal in
-                CategorySpending(
-                    category: categoryTotal.key,
-                    amount: categoryTotal.value,
-                    percentage: (categoryTotal.value / totalAmount) * 100
-                )
-            }
-            .sorted { $0.amount > $1.amount }
-    }
-    
-    private var totalAmount: Double {
-        expenses.reduce(0) { $0 + $1.amount }
+        
+        let totalAmount = categoryTotals.values.reduce(0, +)
+        
+        return categoryTotals.map { categoryTotal in
+            CategorySpending(
+                category: categoryTotal.key,
+                amountInCent: categoryTotal.value,
+                percentage: totalAmount > 0 ?
+                    Int(round((Double(categoryTotal.value) / Double(totalAmount)) * 100)) : 0
+            )
+        }
+        .sorted { $0.amountInCent > $1.amountInCent }
     }
     
     var body: some View {
@@ -51,6 +51,4 @@ struct OverviewView: View {
         }
         .background(Color(.systemGroupedBackground))
     }
-    
-
 }

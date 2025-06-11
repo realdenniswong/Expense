@@ -7,14 +7,6 @@
 
 struct CategorySpending {
     let category: ExpenseCategory
-    let amount: Double
-    let percentage: Double
-    
-    var formattedAmount: String {
-        String(format: "HK$%.2f", amount)
-    }
-    
-    var formattedPercentage: String {
-        "\(Int(percentage))% of total"
-    }
+    let amountInCent: Int
+    let percentage: Int
 }

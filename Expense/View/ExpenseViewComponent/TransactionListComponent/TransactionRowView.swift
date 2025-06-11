@@ -33,7 +33,7 @@ struct TransactionRowView: View {
             VStack(alignment: .leading, spacing: 4) {
 
                 
-                Text(expense.description)
+                Text(expense.amountInCents.currencyString(symbol: "HK$"))
                     .font(.headline)
                     .fontWeight(.semibold)
                     .lineLimit(1)
@@ -49,14 +49,14 @@ struct TransactionRowView: View {
                             .font(.caption)
                             .foregroundColor(.secondary)
                         
-                        Text("Cash") // Placeholder payment method
+                        Text(expense.method.rawValue)
                             .font(.caption)
                             .foregroundColor(.secondary)
                         
                         
                     }
                     
-                    Text(expense.formattedDate)
+                    Text(expense.date.timeString)
                         .font(.caption)
                         .fontWeight(.medium)
                         .foregroundColor(.secondary)
@@ -67,7 +67,7 @@ struct TransactionRowView: View {
             
             // Amount and Date
             VStack(alignment: .trailing, spacing: 4) {
-                Text(expense.formattedAmount)
+                Text(expense.date.timeString)
                     .font(.headline)
                     .fontWeight(.semibold)
                     .monospacedDigit()

@@ -18,7 +18,7 @@ struct SpendingChartView: View {
     var body: some View {
         Chart(categorySpendings, id: \.category.rawValue) { element in
             SectorMark(
-                angle: .value("Amount", element.amount)
+                angle: .value("Amount", element.amountInCent)
             )
             .foregroundStyle(by: .value("Category", element.category.rawValue))
             .opacity(0.8) // Slightly transparent like Apple charts

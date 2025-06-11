@@ -28,31 +28,31 @@ struct SpendingSummaryView:  View {
         return formatter.string(from: lastMonth)
     }
     
-    private var thisMonthAmount: Double {
+    private var thisMonthAmount: Int {
         let calendar = Calendar.current
         let now = Date()
         return expenses.filter { expense in
             calendar.isDate(expense.date, equalTo: now, toGranularity: .month)
-        }.reduce(0) { $0 + $1.amount }
+        }.reduce(0) { $0 + $1.amountInCents }
     }
     
-    private var lastMonthAmount: Double {
+    private var lastMonthAmount: Int {
         let calendar = Calendar.current
         let lastMonth = calendar.date(byAdding: .month, value: -1, to: Date()) ?? Date()
         return expenses.filter { expense in
             calendar.isDate(expense.date, equalTo: lastMonth, toGranularity: .month)
-        }.reduce(0) { $0 + $1.amount }
+        }.reduce(0) { $0 + $1.amountInCents }
     }
     
     // Update monthlyComparison to remove percentage
     private var monthlyComparison: (amount: String, color: Color, symbol: String) {
         if lastMonthAmount == 0 {
-            return (amount: "HK$-", color: .secondary, symbol: "—")
+            return (amount: "HK$-", color: .secondary, symbol: " ")
         }
         
         let difference = thisMonthAmount - lastMonthAmount
         
-        if abs(difference) < 0.01 {
+        if abs(difference) < 1 {
             return (amount: "HK$0", color: .secondary, symbol: "—")
         }
         
@@ -73,7 +73,7 @@ struct SpendingSummaryView:  View {
                         .fontWeight(.medium)
                         .foregroundColor(.secondary)
                     
-                    Text(String(format: "HK$%.0f", thisMonthAmount))
+                    Text(thisMonthAmount.currencyString(symbol: "HK$"))
                         .font(.system(size: 28, weight: .bold, design: .rounded))
                         .foregroundColor(.primary)
                 }

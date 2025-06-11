@@ -35,7 +35,7 @@ struct SpendingBreakdownRowView : View {
                     .font(.body)
                     .fontWeight(.medium)
                 
-                Text("\(categorySpending.formattedPercentage)% of total")
+                Text("\(categorySpending.percentage)% of total")
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
@@ -43,7 +43,7 @@ struct SpendingBreakdownRowView : View {
             Spacer()
             
             // Amount
-            Text(String(format: "HK$%.2f", categorySpending.amount))
+            Text(categorySpending.amountInCent.currencyString(symbol: "HK$"))
                 .font(.body)
                 .fontWeight(.semibold)
                 .monospacedDigit()

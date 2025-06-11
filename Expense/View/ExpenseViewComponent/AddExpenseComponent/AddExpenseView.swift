@@ -120,8 +120,8 @@ struct AddExpenseView: View {
         .onAppear {
             // Pre-populate fields if editing
             if let expense = expenseToEdit {
-                description = expense.description == "Untitled" ? "" : expense.description
-                amount = String(format: "%.2f", expense.amount)
+                description = expense.expenseDescription == "Untitled" ? "" : expense.expenseDescription
+                amount = expense.amountInCents.currencyString
                 selectedCategory = expense.category
                 selectedDate = expense.date
                 selectedPayment = expense.method
@@ -130,12 +130,26 @@ struct AddExpenseView: View {
     }
     
     private func saveExpense() {
-        guard let amountValue = Double(amount) else { return }
+        let normalizedAmount: String
+        
+        if amount.contains(".") {
+            let parts = amount.split(separator: ".")
+            let dollars = String(parts[0])
+            let cents = parts.count > 1 ? String(parts[1]) : ""
+            
+            // Pad cents to 2 digits or truncate if more than 2
+            let paddedCents = String(cents.prefix(2).padding(toLength: 2, withPad: "0", startingAt: 0))
+            normalizedAmount = dollars + paddedCents
+        } else {
+            normalizedAmount = amount + "00"  // Add 00 for missing cents
+        }
+        
+        guard let amountInCents = Int(normalizedAmount) else { return }
         
         if let existingExpense = expenseToEdit {
             // Update existing expense - SwiftData automatically saves changes to @Model objects
             existingExpense.expenseDescription = description.isEmpty ? "Untitled" : description
-            existingExpense.amount = amountValue
+            existingExpense.amountInCents = amountInCents
             existingExpense.category = selectedCategory
             existingExpense.date = selectedDate
             existingExpense.method = selectedPayment
@@ -146,7 +160,7 @@ struct AddExpenseView: View {
             // Create new expense
             let newExpense = Expense(
                 description: description.isEmpty ? "Untitled" : description,
-                amount: amountValue,
+                amountInCents: amountInCents,
                 category: selectedCategory,
                 date: selectedDate,
                 order: Int(Date().timeIntervalSince1970), // Use timestamp as order for new expenses
@@ -161,20 +175,23 @@ struct AddExpenseView: View {
     }
     
     private func sanitizeAmountInput(_ value: String) -> String {
-        let components = value.split(separator: ".")
+        // Only allow digits and one decimal point
+        let filtered = value.filter { $0.isNumber || $0 == "." }
         
-        if components.count > 1 {
-            let integerPart = components[0]
-            let decimalPart = components[1]
-            
-            if decimalPart.count > 2 {
-                let truncatedDecimal = decimalPart.prefix(2)
-                return "\(integerPart).\(truncatedDecimal)"
-            } else {
-                return value
-            }
+        // Split by decimal point
+        let components = filtered.split(separator: ".", omittingEmptySubsequences: false)
+        
+        if components.count > 2 {
+            // Too many decimal points, keep only first decimal
+            return String(components[0]) + "." + String(components[1])
+        } else if components.count == 2 {
+            // Limit decimal places to 2
+            let integerPart = String(components[0])
+            let decimalPart = String(components[1].prefix(2))
+            return integerPart + "." + decimalPart
         } else {
-            return value
+            // No decimal point or just one part
+            return filtered
         }
     }
 }
