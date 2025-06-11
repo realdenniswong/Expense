@@ -6,7 +6,7 @@
 //
 import SwiftUI
 
-struct EmptyStateView : View {
+struct ExpenseEmptyStateView : View {
     var body: some View {
         VStack(spacing: 20) {
             Spacer()

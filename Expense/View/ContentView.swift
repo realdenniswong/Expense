@@ -6,8 +6,10 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct ContentView: View {
+    @Query(sort: \Expense.date, order: .reverse) private var expenses: [Expense]
     @State private var selectedTab = 0
     
     var body: some View {
@@ -15,7 +17,7 @@ struct ContentView: View {
             // Home Tab
             NavigationStack {
                 VStack {
-                    ExpensesView()
+                    ExpenseView(expenses: expenses)
                 }
                 .navigationTitle("Expense")
                 .navigationBarTitleDisplayMode(.large)
@@ -29,7 +31,7 @@ struct ContentView: View {
             // Browse Tab
             NavigationStack {
                 VStack {
-                    OverviewView()
+                    OverviewView(expenses: expenses)
                 }
                 .navigationTitle("Overview")
                 .navigationBarTitleDisplayMode(.large)

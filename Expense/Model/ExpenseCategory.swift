@@ -20,10 +20,10 @@ enum ExpenseCategory: String, CaseIterable, Codable {
         case .foodDrink: return .orange
         case .transportation: return .blue
         case .shopping: return .purple
-        case .entertainment: return .pink
+        case .entertainment: return .cyan
         case .billsUtilities: return .red
         case .healthcare: return .green
-        case .other: return .gray
+        case .other: return .brown
         }
     }
     

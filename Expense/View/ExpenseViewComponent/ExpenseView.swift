@@ -6,27 +6,26 @@
 //
 
 import SwiftUI
-import SwiftData
 
-struct ExpensesView: View {
+struct ExpenseView: View {
     
-    @Query(sort: \Expense.date, order: .reverse) private var expenses: [Expense]
+    let expenses: [Expense]
     @Environment(\.modelContext) private var modelContext
-    @State private var viewModel = ExpensesViewModel()
     @State private var showingAddExpense = false
     @State private var editingExpense: Expense? = nil
-    
+
+    init(expenses: [Expense]) {
+        self.expenses = expenses
+    }
 
     var body: some View {
         NavigationStack {
             if expenses.isEmpty {
-                EmptyStateView()
+                ExpenseEmptyStateView()
             } else {
                 VStack {
-                    //TotalExpensesView(totalExpenses: viewModel.totalExpenses(for: expenses))
-                    TransactionListView(groupedExpenses: viewModel.groupedExpenses(for: expenses), editingExpense: $editingExpense)
+                    TransactionListView(groupedExpenses: groupedExpenses(for: expenses), editingExpense: $editingExpense)
                 }
-                // .padding(.bottom, 50) // padding to avoid overlap with footer
             }
         }
         .background(Color(.systemGroupedBackground))
@@ -45,8 +44,6 @@ struct ExpensesView: View {
         }
     }
     
-    
-    
     private var addExpenseButton: some View {
         Button(action: {
             showingAddExpense = true
@@ -57,5 +54,21 @@ struct ExpensesView: View {
         }
     }
     
-
+    /// Groups expenses by date and sorts them (most recent first)
+    func groupedExpenses(for expenses: [Expense]) -> [(String, [Expense])] {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateStyle = .medium
+        dateFormatter.timeStyle = .none
+        
+        let grouped = Dictionary(grouping: expenses) { expense in
+            dateFormatter.string(from: expense.date)
+        }
+        
+        // Sort by date (most recent first)
+        return grouped.sorted { first, second in
+            let firstDate = expenses.first { dateFormatter.string(from: $0.date) == first.key }?.date ?? Date.distantPast
+            let secondDate = expenses.first { dateFormatter.string(from: $0.date) == second.key }?.date ?? Date.distantPast
+            return firstDate > secondDate
+        }
+    }
 }
