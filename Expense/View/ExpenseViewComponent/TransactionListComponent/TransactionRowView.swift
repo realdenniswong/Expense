@@ -31,9 +31,8 @@ struct TransactionRowView: View {
             
             // Expense Details
             VStack(alignment: .leading, spacing: 4) {
-
                 
-                Text(expense.amountInCents.currencyString(symbol: "HK$"))
+                Text(expense.expenseDescription)
                     .font(.headline)
                     .fontWeight(.semibold)
                     .lineLimit(1)
@@ -44,7 +43,6 @@ struct TransactionRowView: View {
                         Text(expense.category.rawValue)
                             .font(.caption)
                             .foregroundColor(.secondary)
-                        
                         Text("•")
                             .font(.caption)
                             .foregroundColor(.secondary)
@@ -52,8 +50,6 @@ struct TransactionRowView: View {
                         Text(expense.method.rawValue)
                             .font(.caption)
                             .foregroundColor(.secondary)
-                        
-                        
                     }
                     
                     Text(expense.date.timeString)
