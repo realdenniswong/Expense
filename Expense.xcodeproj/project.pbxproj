@@ -43,11 +43,6 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		AD0160F72DFABE6800752F93 /* ViewModel */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = ViewModel;
-			sourceTree = "<group>";
-		};
 		ADA18C222DF99FF500A6D4A2 /* Screenshots */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -101,7 +96,6 @@
 		ADA607D42DECD75D00DD6065 = {
 			isa = PBXGroup;
 			children = (
-				AD0160F72DFABE6800752F93 /* ViewModel */,
 				ADA18C222DF99FF500A6D4A2 /* Screenshots */,
 				ADA607DF2DECD75D00DD6065 /* Expense */,
 				ADA607ED2DECD75F00DD6065 /* ExpenseTests */,
@@ -136,7 +130,6 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				AD0160F72DFABE6800752F93 /* ViewModel */,
 				ADA18C222DF99FF500A6D4A2 /* Screenshots */,
 				ADA607DF2DECD75D00DD6065 /* Expense */,
 			);
