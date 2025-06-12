@@ -8,7 +8,7 @@ import SwiftUI
 
 struct SpendingSummaryView:  View {
     let filteredExpenses: FilteredExpenses
-        
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Spending Summary")
@@ -17,7 +17,7 @@ struct SpendingSummaryView:  View {
             
             // Today's spending (always shown)
             VStack(alignment: .leading, spacing: 6) {
-                Text("Today")
+                Text(filteredExpenses.dailyDisplayName)
                     .font(.subheadline)
                     .fontWeight(.medium)
                     .foregroundColor(.secondary)
@@ -33,7 +33,7 @@ struct SpendingSummaryView:  View {
             // This week and month
             HStack(spacing: 24) {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("This Week")
+                    Text(filteredExpenses.weeklyDisplayName)
                         .font(.subheadline)
                         .fontWeight(.medium)
                         .foregroundColor(.secondary)
@@ -47,7 +47,7 @@ struct SpendingSummaryView:  View {
                 Spacer()
                 
                 VStack(alignment: .trailing, spacing: 6) {
-                    Text("This Month")
+                    Text(filteredExpenses.monthlyDisplayName)
                         .font(.subheadline)
                         .fontWeight(.medium)
                         .foregroundColor(.secondary)
@@ -63,7 +63,6 @@ struct SpendingSummaryView:  View {
         .background(
             RoundedRectangle(cornerRadius: 16)
                 .fill(Color(.systemBackground))
-                .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 2)
         )
         .padding(.top, 8)
     }

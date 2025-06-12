@@ -11,6 +11,8 @@ import Charts
 struct SpendingTrendsView: View {
     let expenses: [Expense]
     let selectedPeriod: TimePeriod
+    let selectedDate: Date // 新加嘅parameter
+    let filteredExpenses: FilteredExpenses
     
     private var trendData: [TrendData] {
         switch selectedPeriod {
@@ -25,11 +27,11 @@ struct SpendingTrendsView: View {
     
     private func getDailyData() -> [TrendData] {
         let calendar = Calendar.current
-        let now = Date()
         var days: [TrendData] = []
         
+        // Show 7 days ending with selected date
         for i in 0..<7 {
-            let dayDate = calendar.date(byAdding: .day, value: -i, to: now) ?? now
+            let dayDate = calendar.date(byAdding: .day, value: -(6-i), to: selectedDate) ?? selectedDate
             let dayStart = calendar.startOfDay(for: dayDate)
             let dayEnd = calendar.date(byAdding: .day, value: 1, to: dayStart) ?? dayStart
             
@@ -51,68 +53,85 @@ struct SpendingTrendsView: View {
             ))
         }
         
-        return days.reversed()
+        return days
     }
     
     private func getWeeklyData() -> [TrendData] {
         let calendar = Calendar.current
-        let now = Date()
         var weeks: [TrendData] = []
         
+        // Get the week containing selectedDate, then go back 4 more weeks
+        guard let selectedWeekInterval = calendar.dateInterval(of: .weekOfYear, for: selectedDate) else {
+            return []
+        }
+        
         for i in 0..<5 {
-            let weekStart = calendar.dateInterval(of: .weekOfYear, for: calendar.date(byAdding: .weekOfYear, value: -i, to: now) ?? now)?.start ?? now
-            let weekEnd = calendar.date(byAdding: .day, value: 6, to: weekStart) ?? now
+            guard let weekStart = calendar.date(byAdding: .weekOfYear, value: -(4-i), to: selectedWeekInterval.start) else {
+                continue
+            }
+            
+            guard let weekInterval = calendar.dateInterval(of: .weekOfYear, for: weekStart) else {
+                continue
+            }
             
             let weekExpenses = expenses.filter { expense in
-                expense.date >= weekStart && expense.date <= weekEnd
+                expense.date >= weekInterval.start && expense.date < weekInterval.end
             }
             
             let totalAmount = weekExpenses.reduce(0) { $0 + $1.amountInCents }
             
             let formatter = DateFormatter()
             formatter.dateFormat = "MMM d"
-            let weekLabel = formatter.string(from: weekStart)
+            let weekLabel = formatter.string(from: weekInterval.start)
             
             weeks.append(TrendData(
-                startDate: weekStart,
-                endDate: weekEnd,
+                startDate: weekInterval.start,
+                endDate: weekInterval.end,
                 amount: totalAmount,
                 label: weekLabel
             ))
         }
         
-        return weeks.reversed()
+        return weeks
     }
     
     private func getMonthlyData() -> [TrendData] {
         let calendar = Calendar.current
-        let now = Date()
         var months: [TrendData] = []
         
+        // Get the month containing selectedDate, then go back 5 more months
+        guard let selectedMonthInterval = calendar.dateInterval(of: .month, for: selectedDate) else {
+            return []
+        }
+        
         for i in 0..<6 {
-            let monthDate = calendar.date(byAdding: .month, value: -i, to: now) ?? now
-            let monthStart = calendar.dateInterval(of: .month, for: monthDate)?.start ?? now
-            let monthEnd = calendar.dateInterval(of: .month, for: monthDate)?.end ?? now
+            guard let monthStart = calendar.date(byAdding: .month, value: -(5-i), to: selectedMonthInterval.start) else {
+                continue
+            }
+            
+            guard let monthInterval = calendar.dateInterval(of: .month, for: monthStart) else {
+                continue
+            }
             
             let monthExpenses = expenses.filter { expense in
-                expense.date >= monthStart && expense.date < monthEnd
+                expense.date >= monthInterval.start && expense.date < monthInterval.end
             }
             
             let totalAmount = monthExpenses.reduce(0) { $0 + $1.amountInCents }
             
             let formatter = DateFormatter()
             formatter.dateFormat = "MMM"
-            let monthLabel = formatter.string(from: monthDate)
+            let monthLabel = formatter.string(from: monthStart)
             
             months.append(TrendData(
-                startDate: monthStart,
-                endDate: monthEnd,
+                startDate: monthInterval.start,
+                endDate: monthInterval.end,
                 amount: totalAmount,
                 label: monthLabel
             ))
         }
         
-        return months.reversed()
+        return months
     }
     
     private var averageSpending: Int {
@@ -135,9 +154,9 @@ struct SpendingTrendsView: View {
     
     private var periodCount: String {
         switch selectedPeriod {
-        case .daily: return "Last 7 days"
-        case .weekly: return "Last 5 weeks"
-        case .monthly: return "Last 6 months"
+        case .daily: return "Last 7 days" + (!filteredExpenses.periodDisplayName.isEmpty ? " (to \(filteredExpenses.periodDisplayName))" : "")
+        case .weekly: return "Last 5 weeks" + (!filteredExpenses.periodDisplayName.isEmpty ? " (to \(filteredExpenses.periodDisplayName))" : "")
+        case .monthly: return "Last 6 months" + (!filteredExpenses.periodDisplayName.isEmpty ? " (to \(filteredExpenses.periodDisplayName))" : "")
         }
     }
     
@@ -180,7 +199,7 @@ struct SpendingTrendsView: View {
             Chart(trendData, id: \.startDate) { trend in
                 BarMark(
                     x: .value("Period", trend.label),
-                    y: .value("Amount", trend.amount)
+                    y: .value("Amount", trend.amount/100)
                 )
                 .foregroundStyle(Color.blue.gradient)
                 .cornerRadius(6)
@@ -205,6 +224,7 @@ struct SpendingTrendsView: View {
                 }
             }
             .animation(.easeInOut(duration: 0.3), value: selectedPeriod)
+            .animation(.easeInOut(duration: 0.3), value: selectedDate)
         }
         .padding(20)
         .background(

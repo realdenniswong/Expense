@@ -36,8 +36,8 @@ struct CategoryChartView: View {
             .chartBackground { chartProxy in
                 Color.clear
             }
-            .frame(height: 280)
-            .padding(.horizontal, 20)  // ← Move padding here
+            .frame(height: 350)
+            .padding(.horizontal, 10)  // ← Move padding here
             .animation(.easeInOut(duration: 0.3), value: period)
         }
     }

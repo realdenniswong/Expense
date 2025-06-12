@@ -10,24 +10,26 @@ import Charts
 struct CategoryAnalysisView: View {
     let filteredExpenses: FilteredExpenses
     
-    private var periodTitle: String {
-        switch filteredExpenses.period {
-        case .daily: return "Today's Categories"
-        case .weekly: return "This Week's Categories"
-        case .monthly: return "This Month's Categories"
-        }
-    }
-    
     var body: some View {
         let categorySpendingTotals = filteredExpenses.categorySpendingTotals
         
         VStack(alignment: .leading, spacing: 20) {
-            // Title
-            Text(periodTitle)
-                .font(.headline)
-                .fontWeight(.semibold)
-                .padding(.horizontal, 20)
-                .padding(.top, 20)
+            
+            
+            VStack(alignment: .leading, spacing: 4) {
+                // Title with dynamic period name
+                Text("Categories")
+                    .font(.headline)
+                    .fontWeight(.semibold)
+                    .padding(.horizontal, 20)
+                    .padding(.top, 20)
+                
+                Text(filteredExpenses.periodDisplayName)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .padding(.horizontal, 20)
+            }
+
             
             // Chart (extracted)
             CategoryChartView(
@@ -38,11 +40,6 @@ struct CategoryAnalysisView: View {
             // Breakdown section (only if has data)
             if !categorySpendingTotals.isEmpty {
                 VStack(alignment: .leading, spacing: 16) {
-                    Text("Breakdown")
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.secondary)
-                        .padding(.horizontal, 20)
                     
                     LazyVStack(spacing: 12) {
                         ForEach(categorySpendingTotals, id: \.category.rawValue) { categorySpending in
@@ -54,6 +51,10 @@ struct CategoryAnalysisView: View {
                 .padding(.bottom, 20)
             }
         }
-        .background(/* same background */)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color(.systemBackground))
+                .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 2)
+        )
     }
 }

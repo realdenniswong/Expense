@@ -29,4 +29,10 @@ extension Date {
         formatter.dateFormat = "hh:mm a"
         return formatter.string(from: self)
     }
+    
+    var dateString: String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        return formatter.string(from: self)
+    }
 }

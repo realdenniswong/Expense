@@ -12,8 +12,9 @@ import Charts
 struct FilteredExpenses {
     let expenses: [Expense]
     let period: TimePeriod
+    let selectedDate: Date // 新加嘅parameter
     
-    // Current period amounts
+    // Current period amounts (always based on TODAY for summary)
     var todayAmount: Int {
         let calendar = Calendar.current
         let now = Date()
@@ -38,23 +39,30 @@ struct FilteredExpenses {
         }.reduce(0) { $0 + $1.amountInCents }
     }
     
-    // Filtered expenses based on selected period
+    // Filtered expenses based on selected period AND selected date
     var filteredExpenses: [Expense] {
         let calendar = Calendar.current
-        let now = Date()
         
         switch period {
         case .daily:
             return expenses.filter { expense in
-                calendar.isDate(expense.date, equalTo: now, toGranularity: .day)
+                calendar.isDate(expense.date, equalTo: selectedDate, toGranularity: .day)
             }
         case .weekly:
+            // Get the week containing the selected date
+            guard let weekInterval = calendar.dateInterval(of: .weekOfYear, for: selectedDate) else {
+                return []
+            }
             return expenses.filter { expense in
-                calendar.isDate(expense.date, equalTo: now, toGranularity: .weekOfYear)
+                expense.date >= weekInterval.start && expense.date < weekInterval.end
             }
         case .monthly:
+            // Get the month containing the selected date
+            guard let monthInterval = calendar.dateInterval(of: .month, for: selectedDate) else {
+                return []
+            }
             return expenses.filter { expense in
-                calendar.isDate(expense.date, equalTo: now, toGranularity: .month)
+                expense.date >= monthInterval.start && expense.date < monthInterval.end
             }
         }
     }
@@ -77,5 +85,55 @@ struct FilteredExpenses {
             )
         }
         .sorted { $0.amountInCent > $1.amountInCent }
+    }
+    
+    // Helper computed properties for selected period
+    var selectedPeriodAmount: Int {
+        filteredExpenses.reduce(0) { $0 + $1.amountInCents }
+    }
+    
+    var dailyDisplayName: String {
+        
+        let formatter = DateFormatter()
+        let calendar = Calendar.current
+        
+        formatter.dateStyle = .medium
+        return formatter.string(from: selectedDate)
+    }
+    
+    var weeklyDisplayName: String {
+        
+        let formatter = DateFormatter()
+        let calendar = Calendar.current
+        
+        formatter.dateFormat = "MMM d"
+        if let weekInterval = calendar.dateInterval(of: .weekOfYear, for: selectedDate) {
+            let startStr = formatter.string(from: weekInterval.start)
+            let endDate = calendar.date(byAdding: .day, value: -1, to: weekInterval.end) ?? weekInterval.end
+            let endStr = formatter.string(from: endDate)
+            return "\(startStr) - \(endStr)"
+        }
+        return "Week"
+    }
+    
+    var monthlyDisplayName: String {
+        
+        let formatter = DateFormatter()
+
+        formatter.dateFormat = "MMMM yyyy"
+        return formatter.string(from: selectedDate)
+    }
+    
+    var periodDisplayName: String {
+
+        
+        switch period {
+        case .daily:
+            return dailyDisplayName
+        case .weekly:
+            return weeklyDisplayName
+        case .monthly:
+            return monthlyDisplayName
+        }
     }
 }

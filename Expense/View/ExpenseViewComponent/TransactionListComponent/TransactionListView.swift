@@ -15,7 +15,7 @@ struct TransactionListView: View {
     var body: some View {
         List {
             ForEach(groupedExpenses, id: \.0) { dateString, expensesForDate in
-                Section(header: Text(dateString)) {
+                Section(header: Text(dateString).listRowInsets(EdgeInsets(top: 12, leading: 0, bottom: 8, trailing: 0))) {
                     ForEach(expensesForDate.sorted(by: { $0.date > $1.date })) { expense in
                         TransactionRowView(expense: expense)
                             .swipeActions(edge: .trailing, allowsFullSwipe: false) {

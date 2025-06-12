@@ -23,9 +23,7 @@ struct ExpenseView: View {
             if expenses.isEmpty {
                 ExpenseEmptyStateView()
             } else {
-                VStack {
-                    TransactionListView(groupedExpenses: groupedExpenses(for: expenses), editingExpense: $editingExpense)
-                }
+                TransactionListView(groupedExpenses: groupedExpenses(for: expenses), editingExpense: $editingExpense)
             }
         }
         .background(Color(.systemGroupedBackground))

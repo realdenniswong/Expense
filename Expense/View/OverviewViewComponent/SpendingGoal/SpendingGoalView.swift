@@ -68,16 +68,33 @@ struct SpendingGoalView: View {
         VStack(alignment: .leading, spacing: 16) {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
-                    Text(periodLabel)
-                        .font(.headline)
-                        .fontWeight(.semibold)
+                    
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(periodLabel)
+                            .font(.headline)
+                            .fontWeight(.semibold)
+                        
+                        Text(filteredExpenses.periodDisplayName)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    
+
                     
                     Spacer()
                     
-                    Text("\(Int(overallProgress * 100))% used")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                        .foregroundColor(overallProgress > 0.8 ? .red : .secondary)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("")
+                            .font(.headline)
+                            .fontWeight(.semibold)
+                        
+                        Text("\(Int(overallProgress * 100))% used")
+                            .font(.caption)
+                            .fontWeight(.medium)
+                            .foregroundColor(overallProgress > 0.8 ? .red : .secondary)
+                    }
+                    
+
                 }
                 
                 VStack(alignment: .leading, spacing: 6) {
