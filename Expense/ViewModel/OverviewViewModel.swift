@@ -95,7 +95,6 @@ struct FilteredExpenses {
     var dailyDisplayName: String {
         
         let formatter = DateFormatter()
-        let calendar = Calendar.current
         
         formatter.dateStyle = .medium
         return formatter.string(from: selectedDate)
