@@ -7,94 +7,55 @@
 import SwiftUI
 
 struct SpendingSummaryView:  View {
-    
-    let expenses: [Expense]
-    
-    init(expenses: [Expense]) {
-        self.expenses = expenses
-    }
-    
-    // Add this computed property for the month name
-    private var currentMonthName: String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMMM"
-        return formatter.string(from: Date())
-    }
-    
-    private var lastMonthName: String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMMM"
-        let lastMonth = Calendar.current.date(byAdding: .month, value: -1, to: Date()) ?? Date()
-        return formatter.string(from: lastMonth)
-    }
-    
-    private var thisMonthAmount: Int {
-        let calendar = Calendar.current
-        let now = Date()
-        return expenses.filter { expense in
-            calendar.isDate(expense.date, equalTo: now, toGranularity: .month)
-        }.reduce(0) { $0 + $1.amountInCents }
-    }
-    
-    private var lastMonthAmount: Int {
-        let calendar = Calendar.current
-        let lastMonth = calendar.date(byAdding: .month, value: -1, to: Date()) ?? Date()
-        return expenses.filter { expense in
-            calendar.isDate(expense.date, equalTo: lastMonth, toGranularity: .month)
-        }.reduce(0) { $0 + $1.amountInCents }
-    }
-    
-    // Update monthlyComparison to remove percentage
-    private var monthlyComparison: (amount: String, color: Color, symbol: String) {
-        if lastMonthAmount == 0 {
-            return (amount: "HK$-", color: .secondary, symbol: " ")
-        }
+    let filteredExpenses: FilteredExpenses
         
-        let difference = thisMonthAmount - lastMonthAmount
-        
-        if abs(difference) < 1 {
-            return (amount: "HK$0", color: .secondary, symbol: "—")
-        }
-        
-        let isIncrease = difference > 0
-        let amountText = "\(isIncrease ? "+" : "")HK$\(String(format: "%.0f", difference))"
-        let color: Color = isIncrease ? .red : .green
-        let symbol = isIncrease ? "▲" : "▼"
-        
-        return (amount: amountText, color: color, symbol: symbol)
-    }
-    
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Spending Summary")
+                .font(.headline)
+                .fontWeight(.semibold)
+            
+            // Today's spending (always shown)
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Today")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .foregroundColor(.secondary)
+                
+                Text(filteredExpenses.todayAmount.currencyString(symbol: "HK$"))
+                    .font(.system(size: 24, weight: .bold, design: .rounded))
+                    .foregroundColor(.primary)
+                    .monospacedDigit()
+            }
+            
+            Divider()
+            
+            // This week and month
+            HStack(spacing: 24) {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("Total Spending (\(currentMonthName))")
+                    Text("This Week")
                         .font(.subheadline)
                         .fontWeight(.medium)
                         .foregroundColor(.secondary)
                     
-                    Text(thisMonthAmount.currencyString(symbol: "HK$"))
-                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                    Text(filteredExpenses.thisWeekAmount.currencyString(symbol: "HK$"))
+                        .font(.system(size: 20, weight: .bold, design: .rounded))
                         .foregroundColor(.primary)
+                        .monospacedDigit()
                 }
                 
                 Spacer()
                 
                 VStack(alignment: .trailing, spacing: 6) {
-                    Text("vs \(lastMonthName)") // Invisible spacer to match left side spacing
+                    Text("This Month")
                         .font(.subheadline)
                         .fontWeight(.medium)
                         .foregroundColor(.secondary)
                     
-                    HStack(spacing: 4) {
-                        Text(monthlyComparison.symbol)
-                            .font(.system(size: 12, weight: .bold))
-                            .foregroundColor(monthlyComparison.color)
-                        
-                        Text(monthlyComparison.amount)
-                            .font(.system(size: 28, weight: .bold, design: .rounded))
-                            .foregroundColor(monthlyComparison.color)
-                    }
+                    Text(filteredExpenses.thisMonthAmount.currencyString(symbol: "HK$"))
+                        .font(.system(size: 20, weight: .bold, design: .rounded))
+                        .foregroundColor(.primary)
+                        .monospacedDigit()
                 }
             }
         }

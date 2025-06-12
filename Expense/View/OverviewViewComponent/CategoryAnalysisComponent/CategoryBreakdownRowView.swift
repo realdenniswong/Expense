@@ -6,7 +6,7 @@
 //
 import SwiftUI
 
-struct SpendingBreakdownRowView : View {
+struct CategoryBreakdownRowView : View {
     
     let categorySpending: CategorySpending
     let expenseCategory: ExpenseCategory

@@ -11,44 +11,49 @@ import Charts
 struct OverviewView: View {
     
     let expenses: [Expense]
+    @State private var selectedPeriod: TimePeriod = .monthly
     
     init(expenses: [Expense]) {
         self.expenses = expenses
     }
     
-    private var categorySpendingTotals: [CategorySpending] {
-        let categoryTotals = Dictionary(grouping: expenses, by: { $0.category })
-            .mapValues { expenses in
-                expenses.reduce(0) { $0 + $1.amountInCents }
-            }
-        
-        let totalAmount = categoryTotals.values.reduce(0, +)
-        
-        return categoryTotals.map { categoryTotal in
-            CategorySpending(
-                category: categoryTotal.key,
-                amountInCent: categoryTotal.value,
-                percentage: totalAmount > 0 ?
-                    Int(round((Double(categoryTotal.value) / Double(totalAmount)) * 100)) : 0
-            )
-        }
-        .sorted { $0.amountInCent > $1.amountInCent }
+    private var filteredExpenses: FilteredExpenses {
+        FilteredExpenses(expenses: expenses, period: selectedPeriod)
     }
     
     var body: some View {
-        ScrollView {
-            VStack(spacing: 24) {
-                SpendingSummaryView(expenses: expenses)
-                if !expenses.isEmpty {
-                    SpendingChartView(categorySpendingTotals: categorySpendingTotals)
-                    SpendingBreakdownListView(categorySpendingTotals: categorySpendingTotals)
-                } else {
-                    OverviewEmptyStateView()
+        VStack(spacing: 0) {
+            // Period Selector at the top
+            VStack {
+                Picker("Period", selection: $selectedPeriod) {
+                    ForEach(TimePeriod.allCases, id: \.self) { period in
+                        Text(period.rawValue).tag(period)
+                    }
                 }
+                .pickerStyle(SegmentedPickerStyle())
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
             }
-            .padding(.horizontal, 16)
-            .padding(.bottom, 32)
+            .background(Color(.systemGroupedBackground))
+            
+            ScrollView {
+                VStack(spacing: 24) {
+                    // Always show spending summary (shows today, week, month regardless of filter)
+                    SpendingSummaryView(filteredExpenses: filteredExpenses)
+                    
+                    // Period-aware goals
+                    SpendingGoalView(filteredExpenses: filteredExpenses)
+                    
+                    // Trends based on selected period
+                    SpendingTrendsView(expenses: expenses, selectedPeriod: selectedPeriod)
+                    
+                    CategoryAnalysisView(filteredExpenses: filteredExpenses)
+
+                }
+                .padding(.horizontal, 16)
+                .padding(.bottom, 32)
+            }
+            .background(Color(.systemGroupedBackground))
         }
-        .background(Color(.systemGroupedBackground))
     }
 }
