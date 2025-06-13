@@ -45,12 +45,7 @@ struct ContentView: View {
             // Library Tab
             NavigationStack {
                 VStack {
-                    Text("Setting")
-                        .font(.largeTitle)
-                        .fontWeight(.bold)
-                        .padding()
-                    
-                    Spacer()
+                    SettingsView()
                 }
                 .navigationTitle("Setting")
                 .navigationBarTitleDisplayMode(.large)
