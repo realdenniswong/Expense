@@ -6,14 +6,16 @@ A modern iOS expense tracking app built with SwiftUI, featuring an Apple-native 
 
 ### Expense
 <div align="center">
-   <img src="https://raw.githubusercontent.com/realdenniswong/Expense/refs/heads/main/Screenshots/expense.png" width="250" alt="Home Screen">
-   <img src="https://raw.githubusercontent.com/realdenniswong/Expense/refs/heads/main/Screenshots/edit_expense.png" width="250" alt="Overview">
-   <img src="https://raw.githubusercontent.com/realdenniswong/Expense/refs/heads/main/Screenshots/add_expense.png" width="250" alt="Overview">
+   <img src="https://raw.githubusercontent.com/realdenniswong/Expense/refs/heads/main/Screenshots/expense_1.PNG" width="250">
+   <img src="https://raw.githubusercontent.com/realdenniswong/Expense/refs/heads/main/Screenshots/expense_2.PNG" width="250">
+   <img src="https://raw.githubusercontent.com/realdenniswong/Expense/refs/heads/main/Screenshots/expense_3.PNG" width="250">
 </div>
 
 ### Overview
 <div align="center">
-   <img src="https://raw.githubusercontent.com/realdenniswong/Expense/refs/heads/main/Screenshots/overview.png" width="250" alt="Add Expense">
+   <img src="https://raw.githubusercontent.com/realdenniswong/Expense/refs/heads/main/Screenshots/overview_1.PNG" width="250">
+   <img src="https://raw.githubusercontent.com/realdenniswong/Expense/refs/heads/main/Screenshots/overview_2.PNG" width="250">
+   <img src="https://raw.githubusercontent.com/realdenniswong/Expense/refs/heads/main/Screenshots/overview_3.PNG" width="250">
 </div>
 
 ## Design
