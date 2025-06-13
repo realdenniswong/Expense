@@ -33,10 +33,12 @@
 		ADA18C262DF9A00D00A6D4A2 /* Exceptions for "Screenshots" folder in "Expense" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				add_expense.png,
-				edit_expense.png,
-				expense.png,
-				overview.png,
+				expense_1.PNG,
+				expense_2.PNG,
+				expense_3.PNG,
+				overview_1.PNG,
+				overview_2.PNG,
+				overview_3.PNG,
 			);
 			target = ADA607DC2DECD75D00DD6065 /* Expense */;
 		};
