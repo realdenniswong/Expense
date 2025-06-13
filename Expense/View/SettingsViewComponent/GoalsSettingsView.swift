@@ -9,8 +9,24 @@ import SwiftUI
 // MARK: - Reusable Goals Settings View
 struct GoalsSettingsView: View {
     let config: GoalPeriodConfig
-    @Binding var showGoals: Bool
-    @Binding var goalCategories: [ExpenseCategory: Bool]
+    let period: TimePeriod
+    @Bindable var settings: Settings
+    
+    private var showGoals: Binding<Bool> {
+        switch period {
+        case .daily: return $settings.showDailyGoals
+        case .weekly: return $settings.showWeeklyGoals
+        case .monthly: return $settings.showMonthlyGoals
+        }
+    }
+    
+    private func isCategoryEnabled(_ category: ExpenseCategory) -> Bool {
+        settings.isCategoryEnabled(category, for: period)
+    }
+    
+    private func toggleCategory(_ category: ExpenseCategory) {
+        settings.toggleCategory(category, for: period)
+    }
     
     var body: some View {
         List {
@@ -24,13 +40,13 @@ struct GoalsSettingsView: View {
                     
                     Spacer()
                     
-                    Toggle("", isOn: $showGoals)
+                    Toggle("", isOn: showGoals)
                 }
             } footer: {
                 Text(config.description)
             }
             
-            if showGoals {
+            if showGoals.wrappedValue {
                 Section {
                     ForEach(ExpenseCategory.allCases, id: \.self) { category in
                         HStack {
@@ -49,8 +65,8 @@ struct GoalsSettingsView: View {
                             Spacer()
                             
                             Toggle("", isOn: Binding(
-                                get: { goalCategories[category] ?? false },
-                                set: { goalCategories[category] = $0 }
+                                get: { isCategoryEnabled(category) },
+                                set: { _ in toggleCategory(category) }
                             ))
                         }
                     }
@@ -68,41 +84,26 @@ struct GoalsSettingsView: View {
 
 // MARK: - Specific Goal Settings Views
 struct DailyGoalsSettingsView: View {
-    @Binding var showDailyGoals: Bool
-    @Binding var dailyGoalCategories: [ExpenseCategory: Bool]
+    @Bindable var settings: Settings
     
     var body: some View {
-        GoalsSettingsView(
-            config: .daily,
-            showGoals: $showDailyGoals,
-            goalCategories: $dailyGoalCategories
-        )
+        GoalsSettingsView(config: .daily, period: .daily, settings: settings)
     }
 }
 
 struct WeeklyGoalsSettingsView: View {
-    @Binding var showWeeklyGoals: Bool
-    @Binding var weeklyGoalCategories: [ExpenseCategory: Bool]
+    @Bindable var settings: Settings
     
     var body: some View {
-        GoalsSettingsView(
-            config: .weekly,
-            showGoals: $showWeeklyGoals,
-            goalCategories: $weeklyGoalCategories
-        )
+        GoalsSettingsView(config: .weekly, period: .weekly, settings: settings)
     }
 }
 
 struct MonthlyGoalsSettingsView: View {
-    @Binding var showMonthlyGoals: Bool
-    @Binding var monthlyGoalCategories: [ExpenseCategory: Bool]
+    @Bindable var settings: Settings
     
     var body: some View {
-        GoalsSettingsView(
-            config: .monthly,
-            showGoals: $showMonthlyGoals,
-            goalCategories: $monthlyGoalCategories
-        )
+        GoalsSettingsView(config: .monthly, period: .monthly, settings: settings)
     }
 }
 

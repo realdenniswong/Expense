@@ -11,15 +11,21 @@ import Charts
 struct SpendingTrendsView: View {
 
     let expenseAnalyzer: ExpenseAnalyzer
-    let expenses: [Expense]
-    let selectedPeriod: TimePeriod
-    let selectedDate: Date
     
-    init(expenseAnalyzer: ExpenseAnalyzer) {
-        self.expenseAnalyzer = expenseAnalyzer
-        expenses = expenseAnalyzer.expenses
-        selectedPeriod = expenseAnalyzer.period
-        selectedDate = expenseAnalyzer.selectedDate
+    private var expenses: [Expense] {
+        expenseAnalyzer.expenses
+    }
+    
+    private var selectedPeriod: TimePeriod {
+        expenseAnalyzer.period
+    }
+    
+    private var selectedDate: Date {
+        expenseAnalyzer.selectedDate
+    }
+    
+    private var settings: Settings? {
+        expenseAnalyzer.settings
     }
     
     private var trendData: [TrendData] {
@@ -47,7 +53,16 @@ struct SpendingTrendsView: View {
                 expense.date >= dayStart && expense.date < dayEnd
             }
             
-            let totalAmount = dayExpenses.reduce(0) { $0 + $1.amountInCents }
+            // Filter by enabled categories if settings are available
+            let filteredExpenses: [Expense]
+            if let settings = settings {
+                let enabledCategories = Set(settings.enabledCategories(for: .daily))
+                filteredExpenses = dayExpenses.filter { enabledCategories.contains($0.category) }
+            } else {
+                filteredExpenses = dayExpenses
+            }
+            
+            let totalAmount = filteredExpenses.reduce(0) { $0 + $1.amountInCents }
             
             let formatter = DateFormatter()
             formatter.dateFormat = "MMM d"
@@ -86,7 +101,16 @@ struct SpendingTrendsView: View {
                 expense.date >= weekInterval.start && expense.date < weekInterval.end
             }
             
-            let totalAmount = weekExpenses.reduce(0) { $0 + $1.amountInCents }
+            // Filter by enabled categories if settings are available
+            let filteredExpenses: [Expense]
+            if let settings = settings {
+                let enabledCategories = Set(settings.enabledCategories(for: .weekly))
+                filteredExpenses = weekExpenses.filter { enabledCategories.contains($0.category) }
+            } else {
+                filteredExpenses = weekExpenses
+            }
+            
+            let totalAmount = filteredExpenses.reduce(0) { $0 + $1.amountInCents }
             
             let formatter = DateFormatter()
             formatter.dateFormat = "MMM d"
@@ -125,7 +149,16 @@ struct SpendingTrendsView: View {
                 expense.date >= monthInterval.start && expense.date < monthInterval.end
             }
             
-            let totalAmount = monthExpenses.reduce(0) { $0 + $1.amountInCents }
+            // Filter by enabled categories if settings are available
+            let filteredExpenses: [Expense]
+            if let settings = settings {
+                let enabledCategories = Set(settings.enabledCategories(for: .monthly))
+                filteredExpenses = monthExpenses.filter { enabledCategories.contains($0.category) }
+            } else {
+                filteredExpenses = monthExpenses
+            }
+            
+            let totalAmount = filteredExpenses.reduce(0) { $0 + $1.amountInCents }
             
             let formatter = DateFormatter()
             formatter.dateFormat = "MMM"

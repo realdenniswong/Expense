@@ -1,5 +1,5 @@
 //
-//  SummaryView.swift
+//  OverviewView.swift
 //  Expense
 //
 //  Created by Dennis Wong on 9/6/2025.
@@ -11,16 +11,18 @@ import Charts
 struct OverviewView: View {
     
     let expenses: [Expense]
+    let settings: Settings
     @State private var selectedPeriod: TimePeriod = .daily
     @State private var selectedDate = Date()
     @State private var showingDatePicker = false
     
-    init(expenses: [Expense]) {
+    init(expenses: [Expense], settings: Settings) {
         self.expenses = expenses
+        self.settings = settings
     }
     
     private var expenseAnalyzer: ExpenseAnalyzer {
-        ExpenseAnalyzer(expenses: expenses, period: selectedPeriod, selectedDate: selectedDate)
+        ExpenseAnalyzer(expenses: expenses, period: selectedPeriod, selectedDate: selectedDate, settings: settings)
     }
     
     private var dateDisplayText: String {
@@ -96,7 +98,12 @@ struct OverviewView: View {
             ScrollView {
                 VStack(spacing: 24) {
                     SpendingSummaryView(expenseAnalyzer: expenseAnalyzer)
-                    SpendingGoalView(expenseAnalyzer: expenseAnalyzer)
+                    
+                    // Only show SpendingGoalView if settings allow it
+                    if settings.shouldShowGoals(for: selectedPeriod) {
+                        SpendingGoalView(expenseAnalyzer: expenseAnalyzer, settings: settings)
+                    }
+                    
                     SpendingTrendsView(expenseAnalyzer: expenseAnalyzer)
                     CategoryAnalysisView(expenseAnalyzer: expenseAnalyzer)
                 }

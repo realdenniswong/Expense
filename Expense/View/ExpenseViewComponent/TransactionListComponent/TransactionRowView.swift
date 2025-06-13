@@ -1,5 +1,5 @@
 //
-//  ExpenseRowView.swift
+//  TransactionRowView.swift
 //  Expense
 //
 //  Created by Dennis Wong on 2/6/2025.
@@ -43,6 +43,7 @@ struct TransactionRowView: View {
                         Text(expense.category.rawValue)
                             .font(.caption)
                             .foregroundColor(.secondary)
+                            .lineLimit(1)
                         Text("•")
                             .font(.caption)
                             .foregroundColor(.secondary)
@@ -50,6 +51,7 @@ struct TransactionRowView: View {
                         Text(expense.method.rawValue)
                             .font(.caption)
                             .foregroundColor(.secondary)
+                            .lineLimit(1)
                     }
                     
                     Text(expense.date.timeString)

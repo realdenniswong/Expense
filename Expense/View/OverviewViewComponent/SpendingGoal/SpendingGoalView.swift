@@ -1,5 +1,5 @@
 //
-//  PeriodAwareSpendingGoalsView.swift
+//  SpendingGoalView.swift
 //  Expense
 //
 //  Created by Dennis Wong on 12/6/2025.
@@ -9,14 +9,22 @@ import SwiftUI
 struct SpendingGoalView: View {
     
     let expenseAnalyzer: ExpenseAnalyzer
+    let settings: Settings
     
     @State private var goals: [ExpenseCategory: Int] = [
         .foodDrink: 150000, // HK$1500
         .transportation: 80000, // HK$800
         .shopping: 100000, // HK$1000
         .entertainment: 60000, // HK$600
-        .billsUtilities: 200000 // HK$2000
+        .billsUtilities: 200000, // HK$2000
+        .healthcare: 50000, // HK$500
+        .other: 30000 // HK$300
     ]
+    
+    // Get only the categories enabled for the current period
+    private var enabledCategories: [ExpenseCategory] {
+        settings.enabledCategories(for: expenseAnalyzer.period)
+    }
     
     private var periodMultiplier: Double {
         switch expenseAnalyzer.period {
@@ -42,11 +50,13 @@ struct SpendingGoalView: View {
     }
     
     private var spendingGoals: [SpendingGoal] {
-        return goals.compactMap { goal in
-            let adjustedLimit = Int(Double(goal.value) * periodMultiplier)
-            let currentSpending = self.currentSpending[goal.key] ?? 0
+        return enabledCategories.compactMap { category in
+            guard let goalAmount = goals[category] else { return nil }
+            
+            let adjustedLimit = Int(Double(goalAmount) * periodMultiplier)
+            let currentSpending = self.currentSpending[category] ?? 0
             return SpendingGoal(
-                category: goal.key,
+                category: category,
                 monthlyLimit: adjustedLimit,
                 currentSpending: currentSpending
             )
@@ -54,11 +64,15 @@ struct SpendingGoalView: View {
     }
     
     private var totalBudget: Int {
-        Int(Double(goals.values.reduce(0, +)) * periodMultiplier)
+        enabledCategories.compactMap { goals[$0] }
+            .reduce(0, +)
+            .let { Int(Double($0) * periodMultiplier) }
     }
     
     private var totalSpent: Int {
-        currentSpending.values.reduce(0, +)
+        enabledCategories.reduce(0) { total, category in
+            total + (currentSpending[category] ?? 0)
+        }
     }
     
     private var overallProgress: Double {
@@ -138,5 +152,12 @@ struct SpendingGoalView: View {
                 .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 2)
         )
         .animation(.easeInOut(duration: 0.3), value: expenseAnalyzer.period)
+    }
+}
+
+// Extension to help with functional programming
+extension Int {
+    func `let`<T>(_ transform: (Int) -> T) -> T {
+        return transform(self)
     }
 }

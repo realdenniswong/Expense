@@ -20,24 +20,14 @@ struct CategoryChartView: View {
                 SectorMark(
                     angle: .value("Amount", element.amountInCent)
                 )
-                .foregroundStyle(by: .value("Category", element.category.rawValue))
+                .foregroundStyle(element.category.color)
                 .opacity(0.8)
             }
-            .chartForegroundStyleScale([
-                "Food & Drink": .orange,
-                "Transportation": .blue,
-                "Shopping": .purple,
-                "Entertainment": .yellow,
-                "Bills & Utilities": .red,
-                "Healthcare": .green,
-                "Other": .brown
-            ])
-            .chartLegend(position: .bottom, alignment: .center, spacing: 16)
             .chartBackground { chartProxy in
                 Color.clear
             }
             .frame(height: 350)
-            .padding(.horizontal, 10)  // ← Move padding here
+            .padding(.horizontal, 10)
             .animation(.easeInOut(duration: 0.3), value: period)
         }
     }

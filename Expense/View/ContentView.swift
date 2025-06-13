@@ -11,6 +11,21 @@ import SwiftData
 struct ContentView: View {
     @Query(sort: \Expense.date, order: .reverse) private var expenses: [Expense]
     @State private var selectedTab = 0
+    @Query private var settingsArray: [Settings]
+    @Environment(\.modelContext) private var modelContext
+    
+    // Get the single settings object, or create one if none exists
+    private var settings: Settings {
+        if let existingSettings = settingsArray.first {
+            return existingSettings
+        } else {
+            // Create the single settings object with fixed ID
+            let newSettings = Settings()
+            modelContext.insert(newSettings)
+            try? modelContext.save()
+            return newSettings
+        }
+    }
     
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -31,7 +46,7 @@ struct ContentView: View {
             // Browse Tab
             NavigationStack {
                 VStack {
-                    OverviewView(expenses: expenses)
+                    OverviewView(expenses: expenses, settings: settings)
                 }
                 .navigationTitle("Overview")
                 .navigationBarTitleDisplayMode(.large)
@@ -45,7 +60,7 @@ struct ContentView: View {
             // Library Tab
             NavigationStack {
                 VStack {
-                    SettingsView()
+                    SettingsView(settings: settings)
                 }
                 .navigationTitle("Setting")
                 .navigationBarTitleDisplayMode(.large)

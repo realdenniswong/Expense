@@ -8,54 +8,14 @@
 import SwiftUI
 
 struct SettingsView: View {
-    // Spending Goal toggles for each period
-    @State private var showDailyGoals = true
-    @State private var showWeeklyGoals = true
-    @State private var showMonthlyGoals = true
-    
-    // Spending Goal category toggles for each period
-    @State private var dailyGoalCategories: [ExpenseCategory: Bool] = [
-        .foodDrink: true,
-        .transportation: true,
-        .shopping: false,
-        .entertainment: true,
-        .billsUtilities: false,
-        .healthcare: false,
-        .other: false
-    ]
-    
-    @State private var weeklyGoalCategories: [ExpenseCategory: Bool] = [
-        .foodDrink: true,
-        .transportation: true,
-        .shopping: true,
-        .entertainment: true,
-        .billsUtilities: false,
-        .healthcare: true,
-        .other: false
-    ]
-    
-    @State private var monthlyGoalCategories: [ExpenseCategory: Bool] = [
-        .foodDrink: true,
-        .transportation: true,
-        .shopping: true,
-        .entertainment: true,
-        .billsUtilities: true,
-        .healthcare: true,
-        .other: true
-    ]
-    
-    // Other settings
-    @State private var enableNotifications = true
+    @Bindable var settings: Settings
     
     var body: some View {
         NavigationStack {
             List {
                 // MARK: - Spending Goals Section
                 Section {
-                    NavigationLink(destination: DailyGoalsSettingsView(
-                        showDailyGoals: $showDailyGoals,
-                        dailyGoalCategories: $dailyGoalCategories
-                    )) {
+                    NavigationLink(destination: DailyGoalsSettingsView(settings: settings)) {
                         HStack {
                             Image(systemName: "target")
                                 .foregroundColor(.blue)
@@ -65,8 +25,8 @@ struct SettingsView: View {
                             
                             Spacer()
                             
-                            if showDailyGoals {
-                                Text("\(enabledCategoriesCount(dailyGoalCategories)) categories")
+                            if settings.showDailyGoals {
+                                Text("\(settings.enabledCategoriesCount(for: .daily)) categories")
                                     .foregroundColor(.secondary)
                             } else {
                                 Text("Off")
@@ -75,10 +35,7 @@ struct SettingsView: View {
                         }
                     }
                     
-                    NavigationLink(destination: WeeklyGoalsSettingsView(
-                        showWeeklyGoals: $showWeeklyGoals,
-                        weeklyGoalCategories: $weeklyGoalCategories
-                    )) {
+                    NavigationLink(destination: WeeklyGoalsSettingsView(settings: settings)) {
                         HStack {
                             Image(systemName: "calendar.badge.clock")
                                 .foregroundColor(.orange)
@@ -88,8 +45,8 @@ struct SettingsView: View {
                             
                             Spacer()
                             
-                            if showWeeklyGoals {
-                                Text("\(enabledCategoriesCount(weeklyGoalCategories)) categories")
+                            if settings.showWeeklyGoals {
+                                Text("\(settings.enabledCategoriesCount(for: .weekly)) categories")
                                     .foregroundColor(.secondary)
                             } else {
                                 Text("Off")
@@ -98,10 +55,7 @@ struct SettingsView: View {
                         }
                     }
                     
-                    NavigationLink(destination: MonthlyGoalsSettingsView(
-                        showMonthlyGoals: $showMonthlyGoals,
-                        monthlyGoalCategories: $monthlyGoalCategories
-                    )) {
+                    NavigationLink(destination: MonthlyGoalsSettingsView(settings: settings)) {
                         HStack {
                             Image(systemName: "calendar")
                                 .foregroundColor(.green)
@@ -111,8 +65,8 @@ struct SettingsView: View {
                             
                             Spacer()
                             
-                            if showMonthlyGoals {
-                                Text("\(enabledCategoriesCount(monthlyGoalCategories)) categories")
+                            if settings.showMonthlyGoals {
+                                Text("\(settings.enabledCategoriesCount(for: .monthly)) categories")
                                     .foregroundColor(.secondary)
                             } else {
                                 Text("Off")
@@ -137,7 +91,7 @@ struct SettingsView: View {
                         
                         Spacer()
                         
-                        Toggle("", isOn: $enableNotifications)
+                        Toggle("", isOn: $settings.enableNotifications)
                     }
                 } header: {
                     Text("Notifications")
@@ -167,9 +121,5 @@ struct SettingsView: View {
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.large)
         }
-    }
-    
-    private func enabledCategoriesCount(_ categories: [ExpenseCategory: Bool]) -> Int {
-        categories.values.filter { $0 }.count
     }
 }

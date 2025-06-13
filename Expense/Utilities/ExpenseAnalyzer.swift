@@ -12,6 +12,7 @@ struct ExpenseAnalyzer {
     let expenses: [Expense]
     let period: TimePeriod
     let selectedDate: Date
+    let settings: Settings?  // Optional settings for category filtering
     
     // Filtered expenses based on selected period AND selected date
     var filteredExpenses: [Expense] {
@@ -41,16 +42,21 @@ struct ExpenseAnalyzer {
         }
     }
     
-    // Category spending for filtered period
+    // Category spending for filtered period - shows ALL categories (pure analysis)
     var categorySpendingTotals: [CategorySpending] {
         let categoryTotals = Dictionary(grouping: filteredExpenses, by: { $0.category })
             .mapValues { expenses in
                 expenses.reduce(0) { $0 + $1.amountInCents }
             }
         
-        let totalAmount = categoryTotals.values.reduce(0, +)
+        // Show all categories that have spending (no filtering by settings)
+        let filteredCategoryTotals = categoryTotals.filter { _, amount in
+            amount > 0
+        }
         
-        return categoryTotals.map { categoryTotal in
+        let totalAmount = filteredCategoryTotals.values.reduce(0, +)
+        
+        return filteredCategoryTotals.map { categoryTotal in
             CategorySpending(
                 category: categoryTotal.key,
                 amountInCent: categoryTotal.value,
@@ -61,9 +67,16 @@ struct ExpenseAnalyzer {
         .sorted { $0.amountInCent > $1.amountInCent }
     }
     
-    // Total spending for the selected period
-    var totalSpending: Int {
-        filteredExpenses.reduce(0) { $0 + $1.amountInCents }
+    // Total spending for goals (only enabled categories)
+    var totalGoalsSpending: Int {
+        if let settings = settings {
+            let enabledCategories = Set(settings.enabledCategories(for: period))
+            return filteredExpenses
+                .filter { enabledCategories.contains($0.category) }
+                .reduce(0) { $0 + $1.amountInCents }
+        } else {
+            return filteredExpenses.reduce(0) { $0 + $1.amountInCents }
+        }
     }
     
     // MARK: - Display Names
