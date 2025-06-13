@@ -34,21 +34,21 @@ struct AddExpenseView: View {
                 // Amount input
                 Section {
                     HStack {
-                        Text("$")
+                        Text("HK$")
                             .font(.system(size: 30))
                             .foregroundColor(.secondary)
+                        
                         TextField("Amount", text: $amount)
                             .keyboardType(.decimalPad)
-                            .font(.system(size: 30))
+                            .font(.system(size: 30, weight: .regular, design: .default))
                             .multilineTextAlignment(.trailing)
                             .focused($isAmountFieldFocused)
                             .onChange(of: amount) { oldValue, newValue in
                                 amount = sanitizeAmountInput(newValue)
                             }
                     }
-                    .padding()
-                    .cornerRadius(8)
-                    .contentShape(Rectangle()) // Makes the whole HStack tappable
+                    .padding(.vertical, 8)  // Only vertical padding
+                    .contentShape(Rectangle())
                     .onTapGesture {
                         isAmountFieldFocused = true
                     }

@@ -267,11 +267,6 @@ struct SpendingTrendsView: View {
             .animation(.easeInOut(duration: 0.3), value: selectedPeriod)
             .animation(.easeInOut(duration: 0.3), value: selectedDate)
         }
-        .padding(20)
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color(.systemBackground))
-                .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 2)
-        )
+        .cardBackground()
     }
 }

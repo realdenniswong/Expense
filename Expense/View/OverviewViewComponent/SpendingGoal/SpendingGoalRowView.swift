@@ -14,15 +14,7 @@ struct SpendingGoalRowView: View {
         VStack(spacing: 8) {
             HStack {
                 HStack(spacing: 8) {
-                    ZStack {
-                        Circle()
-                            .fill(goal.category.color.opacity(0.15))
-                            .frame(width: 32, height: 32)
-                        
-                        goal.category.icon
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundColor(goal.category.color)
-                    }
+                    CategoryIconView(category: goal.category, size: 32, iconSize: 14)
                     
                     Text(goal.category.rawValue)
                         .font(.subheadline)

@@ -14,6 +14,27 @@ struct ExpenseAnalyzer {
     let selectedDate: Date
     let settings: Settings?  // Optional settings for category filtering
     
+    var todayAmount: Int {
+        let calendar = Calendar.current
+        return expenses.filter { expense in
+            calendar.isDate(expense.date, equalTo: selectedDate, toGranularity: .day)
+        }.reduce(0) { $0 + $1.amountInCents }
+    }
+    
+    var thisWeekAmount: Int {
+        let calendar = Calendar.current
+        return expenses.filter { expense in
+            calendar.isDate(expense.date, equalTo: selectedDate, toGranularity: .weekOfYear)
+        }.reduce(0) { $0 + $1.amountInCents }
+    }
+    
+    var thisMonthAmount: Int {
+        let calendar = Calendar.current
+        return expenses.filter { expense in
+            calendar.isDate(expense.date, equalTo: selectedDate, toGranularity: .month)
+        }.reduce(0) { $0 + $1.amountInCents }
+    }
+    
     // Filtered expenses based on selected period AND selected date
     var filteredExpenses: [Expense] {
         let calendar = Calendar.current

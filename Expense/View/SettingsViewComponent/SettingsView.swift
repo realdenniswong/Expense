@@ -13,8 +13,21 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             List {
+                
                 // MARK: - Spending Goals Section
                 Section {
+                    NavigationLink(destination: SpendingLimitView(settings: settings)) {
+                        HStack {
+                            Image(systemName: "dollarsign.circle")
+                                .foregroundColor(.green)
+                                .frame(width: 24)
+                            
+                            Text("Goal Amounts")
+                            
+                            Spacer()
+                        }
+                    }
+                    
                     NavigationLink(destination: DailyGoalsSettingsView(settings: settings)) {
                         HStack {
                             Image(systemName: "target")
@@ -80,23 +93,35 @@ struct SettingsView: View {
                     Text("Configure which spending goals to display for each time period.")
                 }
                 
-                // MARK: - Notifications Section
+                // MARK: - Data Section
                 Section {
-                    HStack {
-                        Image(systemName: "bell")
-                            .foregroundColor(.red)
-                            .frame(width: 24)
-                        
-                        Text("Budget Alerts")
-                        
-                        Spacer()
-                        
-                        Toggle("", isOn: $settings.enableNotifications)
+                    NavigationLink(destination: DataExportView()) {
+                        HStack {
+                            Image(systemName: "square.and.arrow.up")
+                                .foregroundColor(.blue)
+                                .frame(width: 24)
+                            
+                            Text("Export Data")
+                            
+                            Spacer()
+                        }
+                    }
+                    
+                    NavigationLink(destination: DataImportView()) {
+                        HStack {
+                            Image(systemName: "square.and.arrow.down")
+                                .foregroundColor(.green)
+                                .frame(width: 24)
+                            
+                            Text("Import Data")
+                            
+                            Spacer()
+                        }
                     }
                 } header: {
-                    Text("Notifications")
+                    Text("Data")
                 } footer: {
-                    Text("Get notified when you're approaching or exceeding your spending goals.")
+                    Text("Export your expense data for backup or import data from other sources.")
                 }
                 
                 // MARK: - About Section

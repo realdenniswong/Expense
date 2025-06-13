@@ -19,15 +19,7 @@ struct CategoryBreakdownRowView : View {
     var body: some View {
         HStack {
             // Category Icon
-            ZStack {
-                Circle()
-                    .fill(categorySpending.category.color.opacity(0.15))
-                    .frame(width: 40, height: 40)
-                
-                expenseCategory.icon
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(expenseCategory.color)
-            }
+            CategoryIconView(category: categorySpending.category)
             
             // Category Details
             VStack(alignment: .leading, spacing: 2) {

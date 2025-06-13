@@ -18,16 +18,8 @@ struct TransactionRowView: View {
     var body: some View {
         HStack {
             // Category Icon
-            ZStack {
-                Circle()
-                    .fill(expense.category.color.opacity(0.15))
-                    .frame(width: 48, height: 48)
-                
-                expense.category.icon
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundColor(expense.category.color)
-            }
-            .padding(.trailing, 8) // Adds spacing after the icon
+            CategoryIconView(category: expense.category, size: 48, iconSize: 18)
+                .padding(.trailing, 8) // Adds spacing after the icon
             
             // Expense Details
             VStack(alignment: .leading, spacing: 4) {
