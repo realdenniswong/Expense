@@ -19,8 +19,8 @@ struct OverviewView: View {
         self.expenses = expenses
     }
     
-    private var filteredExpenses: FilteredExpenses {
-        FilteredExpenses(expenses: expenses, period: selectedPeriod, selectedDate: selectedDate)
+    private var expenseAnalyzer: ExpenseAnalyzer {
+        ExpenseAnalyzer(expenses: expenses, period: selectedPeriod, selectedDate: selectedDate)
     }
     
     private var dateDisplayText: String {
@@ -95,10 +95,10 @@ struct OverviewView: View {
             
             ScrollView {
                 VStack(spacing: 24) {
-                    SpendingSummaryView(filteredExpenses: filteredExpenses)
-                    SpendingGoalView(filteredExpenses: filteredExpenses)
-                    SpendingTrendsView(expenses: expenses, selectedPeriod: selectedPeriod, selectedDate: selectedDate, filteredExpenses: filteredExpenses)
-                    CategoryAnalysisView(filteredExpenses: filteredExpenses)
+                    SpendingSummaryView(expenseAnalyzer: expenseAnalyzer)
+                    SpendingGoalView(expenseAnalyzer: expenseAnalyzer)
+                    SpendingTrendsView(expenseAnalyzer: expenseAnalyzer)
+                    CategoryAnalysisView(expenseAnalyzer: expenseAnalyzer)
                 }
                 .padding(.horizontal, 16)
                 .padding(.bottom, 32)

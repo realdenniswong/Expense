@@ -7,7 +7,9 @@
 import SwiftUI
 
 struct SpendingGoalView: View {
-    let filteredExpenses: FilteredExpenses
+    
+    let expenseAnalyzer: ExpenseAnalyzer
+    
     @State private var goals: [ExpenseCategory: Int] = [
         .foodDrink: 150000, // HK$1500
         .transportation: 80000, // HK$800
@@ -17,7 +19,7 @@ struct SpendingGoalView: View {
     ]
     
     private var periodMultiplier: Double {
-        switch filteredExpenses.period {
+        switch expenseAnalyzer.period {
         case .daily: return 1.0 / 30.0 // Daily goal = monthly goal / 30
         case .weekly: return 1.0 / 4.0  // Weekly goal = monthly goal / 4
         case .monthly: return 1.0       // Monthly goal as-is
@@ -25,7 +27,7 @@ struct SpendingGoalView: View {
     }
     
     private var periodLabel: String {
-        switch filteredExpenses.period {
+        switch expenseAnalyzer.period {
         case .daily: return "Daily Goals"
         case .weekly: return "Weekly Goals"
         case .monthly: return "Monthly Goals"
@@ -33,7 +35,7 @@ struct SpendingGoalView: View {
     }
     
     private var currentSpending: [ExpenseCategory: Int] {
-        return Dictionary(grouping: filteredExpenses.filteredExpenses, by: { $0.category })
+        return Dictionary(grouping: expenseAnalyzer.filteredExpenses, by: { $0.category })
             .mapValues { expenses in
                 expenses.reduce(0) { $0 + $1.amountInCents }
             }
@@ -74,7 +76,7 @@ struct SpendingGoalView: View {
                             .font(.headline)
                             .fontWeight(.semibold)
                         
-                        Text(filteredExpenses.periodDisplayName)
+                        Text(expenseAnalyzer.periodDisplayName)
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
@@ -135,6 +137,6 @@ struct SpendingGoalView: View {
                 .fill(Color(.systemBackground))
                 .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 2)
         )
-        .animation(.easeInOut(duration: 0.3), value: filteredExpenses.period)
+        .animation(.easeInOut(duration: 0.3), value: expenseAnalyzer.period)
     }
 }

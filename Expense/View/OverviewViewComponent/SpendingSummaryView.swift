@@ -7,7 +7,30 @@
 import SwiftUI
 
 struct SpendingSummaryView:  View {
-    let filteredExpenses: FilteredExpenses
+    
+    let expenseAnalyzer: ExpenseAnalyzer
+    
+    // Move the calculations directly into this view
+    private var todayAmount: Int {
+        let calendar = Calendar.current
+        return expenseAnalyzer.expenses.filter { expense in
+            calendar.isDate(expense.date, equalTo: expenseAnalyzer.selectedDate, toGranularity: .day)
+        }.reduce(0) { $0 + $1.amountInCents }
+    }
+    
+    private var thisWeekAmount: Int {
+        let calendar = Calendar.current
+        return expenseAnalyzer.expenses.filter { expense in
+            calendar.isDate(expense.date, equalTo: expenseAnalyzer.selectedDate, toGranularity: .weekOfYear)
+        }.reduce(0) { $0 + $1.amountInCents }
+    }
+    
+    private var thisMonthAmount: Int {
+        let calendar = Calendar.current
+        return expenseAnalyzer.expenses.filter { expense in
+            calendar.isDate(expense.date, equalTo: expenseAnalyzer.selectedDate, toGranularity: .month)
+        }.reduce(0) { $0 + $1.amountInCents }
+    }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -17,12 +40,12 @@ struct SpendingSummaryView:  View {
             
             // Today's spending (always shown)
             VStack(alignment: .leading, spacing: 6) {
-                Text(filteredExpenses.dailyDisplayName)
+                Text(expenseAnalyzer.dailyDisplayName)
                     .font(.subheadline)
                     .fontWeight(.medium)
                     .foregroundColor(.secondary)
                 
-                Text(filteredExpenses.todayAmount.currencyString(symbol: "HK$"))
+                Text(todayAmount.currencyString(symbol: "HK$"))
                     .font(.system(size: 24, weight: .bold, design: .rounded))
                     .foregroundColor(.primary)
                     .monospacedDigit()
@@ -33,12 +56,12 @@ struct SpendingSummaryView:  View {
             // This week and month
             HStack(spacing: 24) {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(filteredExpenses.weeklyDisplayName)
+                    Text(expenseAnalyzer.weeklyDisplayName)
                         .font(.subheadline)
                         .fontWeight(.medium)
                         .foregroundColor(.secondary)
                     
-                    Text(filteredExpenses.thisWeekAmount.currencyString(symbol: "HK$"))
+                    Text(thisWeekAmount.currencyString(symbol: "HK$"))
                         .font(.system(size: 20, weight: .bold, design: .rounded))
                         .foregroundColor(.primary)
                         .monospacedDigit()
@@ -47,12 +70,12 @@ struct SpendingSummaryView:  View {
                 Spacer()
                 
                 VStack(alignment: .trailing, spacing: 6) {
-                    Text(filteredExpenses.monthlyDisplayName)
+                    Text(expenseAnalyzer.monthlyDisplayName)
                         .font(.subheadline)
                         .fontWeight(.medium)
                         .foregroundColor(.secondary)
                     
-                    Text(filteredExpenses.thisMonthAmount.currencyString(symbol: "HK$"))
+                    Text(thisMonthAmount.currencyString(symbol: "HK$"))
                         .font(.system(size: 20, weight: .bold, design: .rounded))
                         .foregroundColor(.primary)
                         .monospacedDigit()

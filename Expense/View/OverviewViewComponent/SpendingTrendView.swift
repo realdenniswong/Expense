@@ -9,10 +9,18 @@ import SwiftUI
 import Charts
 
 struct SpendingTrendsView: View {
+
+    let expenseAnalyzer: ExpenseAnalyzer
     let expenses: [Expense]
     let selectedPeriod: TimePeriod
-    let selectedDate: Date // 新加嘅parameter
-    let filteredExpenses: FilteredExpenses
+    let selectedDate: Date
+    
+    init(expenseAnalyzer: ExpenseAnalyzer) {
+        self.expenseAnalyzer = expenseAnalyzer
+        expenses = expenseAnalyzer.expenses
+        selectedPeriod = expenseAnalyzer.period
+        selectedDate = expenseAnalyzer.selectedDate
+    }
     
     private var trendData: [TrendData] {
         switch selectedPeriod {
@@ -154,9 +162,9 @@ struct SpendingTrendsView: View {
     
     private var periodCount: String {
         switch selectedPeriod {
-        case .daily: return "Last 7 days" + (!filteredExpenses.periodDisplayName.isEmpty ? " (to \(filteredExpenses.periodDisplayName))" : "")
-        case .weekly: return "Last 5 weeks" + (!filteredExpenses.periodDisplayName.isEmpty ? " (to \(filteredExpenses.periodDisplayName))" : "")
-        case .monthly: return "Last 6 months" + (!filteredExpenses.periodDisplayName.isEmpty ? " (to \(filteredExpenses.periodDisplayName))" : "")
+        case .daily: return "Last 7 days" + (!expenseAnalyzer.periodDisplayName.isEmpty ? " (to \(expenseAnalyzer.periodDisplayName))" : "")
+        case .weekly: return "Last 5 weeks" + (!expenseAnalyzer.periodDisplayName.isEmpty ? " (to \(expenseAnalyzer.periodDisplayName))" : "")
+        case .monthly: return "Last 6 months" + (!expenseAnalyzer.periodDisplayName.isEmpty ? " (to \(expenseAnalyzer.periodDisplayName))" : "")
         }
     }
     

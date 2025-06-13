@@ -8,10 +8,10 @@ import SwiftUI
 import Charts
 
 struct CategoryAnalysisView: View {
-    let filteredExpenses: FilteredExpenses
+    let expenseAnalyzer: ExpenseAnalyzer
     
     var body: some View {
-        let categorySpendingTotals = filteredExpenses.categorySpendingTotals
+        let categorySpendingTotals = expenseAnalyzer.categorySpendingTotals
         
         VStack(alignment: .leading, spacing: 20) {
             
@@ -24,7 +24,7 @@ struct CategoryAnalysisView: View {
                     .padding(.horizontal, 20)
                     .padding(.top, 20)
                 
-                Text(filteredExpenses.periodDisplayName)
+                Text(expenseAnalyzer.periodDisplayName)
                     .font(.caption)
                     .foregroundColor(.secondary)
                     .padding(.horizontal, 20)
@@ -34,7 +34,7 @@ struct CategoryAnalysisView: View {
             // Chart (extracted)
             CategoryChartView(
                 categorySpendingTotals: categorySpendingTotals,
-                period: filteredExpenses.period
+                period: expenseAnalyzer.period
             )
             
             // Breakdown section (only if has data)
