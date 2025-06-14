@@ -97,7 +97,7 @@ struct OverviewView: View {
             
             ScrollView {
                 VStack(spacing: 24) {
-                    SpendingSummaryView(expenseAnalyzer: expenseAnalyzer)
+                    SpendingSummaryView(expenseAnalyzer: expenseAnalyzer, selectedPeriod: selectedPeriod)
                     
                     // Only show SpendingGoalView if settings allow it
                     if settings.shouldShowGoals(for: selectedPeriod) {
@@ -129,6 +129,7 @@ struct OverviewView: View {
             Image(systemName: "calendar")
                 .font(.title2)
                 .fontWeight(.medium)
+                .frame(width: 24, height: 24) 
         }
     }
     

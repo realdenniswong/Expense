@@ -74,14 +74,11 @@ struct AddExpenseView: View {
         return isAccountantMode && currentRecordIndex != nil && (currentRecordIndex! > 0 || isAddingNewRecord)
     }
     
-    // Dynamic save button
-    private var rightButtonConfig: (text: String, icon: String) {
-        if !isAccountantMode {
-            return ("Save", "")
-        } else if isAddingNewRecord {
-            return ("", "checkmark")
+    private var rightButtonText: String {
+        if !isAccountantMode || isAddingNewRecord {
+            return "Save"
         } else {
-            return ("", "chevron.right")
+            return "Next"
         }
     }
     
@@ -153,7 +150,6 @@ struct AddExpenseView: View {
                     Section {
                         DatePicker("Date and time", selection: $selectedDate, displayedComponents: [.date, .hourAndMinute])
                             .datePickerStyle(.graphical)
-                            .padding(.vertical, 8)
                     }
                     
                     // Record navigation info (only in accountant mode)
@@ -226,12 +222,8 @@ struct AddExpenseView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     if isAccountantMode && canGoBack {
-                        Button {
+                        Button("Previous") {
                             goToPreviousRecord()
-                        } label: {
-                            Image(systemName: "chevron.left")
-                                .font(.title2)
-                                .fontWeight(.medium)
                         }
                     } else {
                         Button("Cancel") {
@@ -241,16 +233,8 @@ struct AddExpenseView: View {
                 }
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
+                    Button(rightButtonText) {
                         handleRightButtonTap()
-                    } label: {
-                        if rightButtonConfig.icon.isEmpty {
-                            Text(rightButtonConfig.text)
-                        } else {
-                            Image(systemName: rightButtonConfig.icon)
-                                .font(.title2)
-                                .fontWeight(.medium)
-                        }
                     }
                     .disabled(isAddingNewRecord && amount.isEmpty)
                 }

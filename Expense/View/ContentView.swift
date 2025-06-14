@@ -31,9 +31,7 @@ struct ContentView: View {
         TabView(selection: $selectedTab) {
             // Home Tab
             NavigationStack {
-                VStack {
-                    ExpenseView(expenses: expenses)
-                }
+                ExpenseView(expenses: expenses, settings: settings)
                 .navigationTitle("Expense")
                 .navigationBarTitleDisplayMode(.large)
             }

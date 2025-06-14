@@ -21,6 +21,10 @@ struct SettingsView: View {
                         
                         Toggle("", isOn: $settings.accountantMode)
                     }
+                } header: {
+                    Text("Interface")
+                } footer: {
+                    Text("Accountant mode provides a streamlined interface optimized for quick expense entry. The toolbar shows a book icon instead of a plus, and forms are optimized for professional use.")
                 }
                 
                 // MARK: - Spending Goals Section

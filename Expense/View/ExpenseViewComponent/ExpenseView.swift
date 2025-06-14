@@ -10,12 +10,9 @@ import SwiftUI
 struct ExpenseView: View {
     
     let expenses: [Expense]
+    let settings: Settings
     @State private var showingAddExpense = false
     @State private var editingExpense: Expense? = nil
-
-    init(expenses: [Expense]) {
-        self.expenses = expenses
-    }
 
     // MARK: - View
     
@@ -30,7 +27,13 @@ struct ExpenseView: View {
         .background(Color(.systemGroupedBackground))
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
-                addExpenseButton
+                Button(action: {
+                    showingAddExpense = true
+                }) {
+                    Image(systemName: settings.accountantMode ? "book.closed" : "plus")
+                        .font(.title2)
+                        .fontWeight(.medium)
+                }
             }
         }
         // When creating a transaction
@@ -42,17 +45,6 @@ struct ExpenseView: View {
             AddExpenseView(expenseToEdit: expense)
         }
     }
-    
-    private var addExpenseButton: some View {
-        Button(action: {
-            showingAddExpense = true
-        }) {
-            Image(systemName: "plus")
-                .font(.title2)
-                .fontWeight(.medium)
-        }
-    }
-    
     // MARK: - Functions
     
     /// Groups expenses by date and sorts them (most recent first)
