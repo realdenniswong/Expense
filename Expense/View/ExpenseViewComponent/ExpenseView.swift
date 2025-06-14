@@ -10,7 +10,6 @@ import SwiftUI
 struct ExpenseView: View {
     
     let expenses: [Expense]
-    @Environment(\.modelContext) private var modelContext
     @State private var showingAddExpense = false
     @State private var editingExpense: Expense? = nil
 
@@ -18,6 +17,8 @@ struct ExpenseView: View {
         self.expenses = expenses
     }
 
+    // MARK: - View
+    
     var body: some View {
         NavigationStack {
             if expenses.isEmpty {
@@ -51,6 +52,8 @@ struct ExpenseView: View {
                 .fontWeight(.medium)
         }
     }
+    
+    // MARK: - Functions
     
     /// Groups expenses by date and sorts them (most recent first)
     func groupedExpenses(for expenses: [Expense]) -> [(String, [Expense])] {

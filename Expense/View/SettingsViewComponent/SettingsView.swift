@@ -13,6 +13,15 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             List {
+                Section{
+                    HStack {
+                        Text("Accountant Mode")
+                        
+                        Spacer()
+                        
+                        Toggle("", isOn: $settings.accountantMode)
+                    }
+                }
                 
                 // MARK: - Spending Goals Section
                 Section {

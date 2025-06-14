@@ -31,6 +31,8 @@ class Settings {
     var healthcareGoalAmount: Int?
     var otherGoalAmount: Int?
     
+    var accountantMode: Bool
+    
     init(
         id: UUID = UUID(),
         showDailyGoals: Bool = true,
@@ -38,7 +40,8 @@ class Settings {
         showMonthlyGoals: Bool = true,
         dailyGoalCategories: Array<ExpenseCategory> = [.foodDrink, .transportation, .entertainment],
         weeklyGoalCategories: Array<ExpenseCategory> = [.foodDrink, .transportation, .shopping, .entertainment, .healthcare],
-        monthlyGoalCategories: Array<ExpenseCategory> = ExpenseCategory.allCases
+        monthlyGoalCategories: Array<ExpenseCategory> = ExpenseCategory.allCases,
+        accountantMode: Bool = false
     ) {
         self.id = id
         self.showDailyGoals = showDailyGoals
@@ -56,6 +59,8 @@ class Settings {
         self.billsUtilitiesGoalAmount = nil
         self.healthcareGoalAmount = nil
         self.otherGoalAmount = nil
+        
+        self.accountantMode = accountantMode
     }
     
     // MARK: - Computed Properties for ExpenseCategory arrays
