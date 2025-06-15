@@ -201,10 +201,10 @@ struct AddExpenseView: View {
                 if(isAccountantMode){
                     ToolbarItem(placement: .principal){
                         VStack{
-                            Text("Accountant Mode")
+                            Text("Quick Entry")
                                 .font(.headline)
                                 .foregroundStyle(.primary)
-                            Text(isAddingNewRecord ? "Adding new expense" : "Editing record \(currentRecordIndex! + 1) of \(allExpenses.count)")
+                            Text(isAddingNewRecord ? "Adding new expense" : "Editing record \(allExpenses.count - currentRecordIndex!) of \(allExpenses.count)")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
