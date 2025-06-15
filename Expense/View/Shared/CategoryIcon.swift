@@ -6,7 +6,7 @@
 //
 import SwiftUI
 
-struct CategoryIconView: View {
+struct CategoryIcon: View {
     let category: ExpenseCategory
     let size: CGFloat
     let iconSize: CGFloat

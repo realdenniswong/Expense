@@ -39,15 +39,7 @@ struct GoalAmountRow: View {
     var body: some View {
         HStack(spacing: 12) {
             // Category icon
-            ZStack {
-                Circle()
-                    .fill(category.color.opacity(0.15))
-                    .frame(width: 40, height: 40)
-                
-                category.icon
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(category.color)
-            }
+            CategoryIcon(category: category, size: 40, iconSize: 16)
             
             // Category name
             VStack(alignment: .leading, spacing: 2) {
@@ -103,8 +95,8 @@ struct GoalAmountRow: View {
     }
     
     private func loadCurrentAmount() {
-        let currentAmount = settings.goalAmount(for: category)
-        amountText = String(currentAmount / 100) // Convert cents to dollars
+        let currentMoney = settings.goalMoney(for: category)
+        amountText = String(currentMoney.cents / 100) // Convert cents to dollars
     }
     
     private func saveAmount() {
@@ -112,8 +104,8 @@ struct GoalAmountRow: View {
             loadCurrentAmount() // Reset to current value if invalid
             return
         }
-        let amountInCents = dollars * 100
-        settings.setGoalAmount(amountInCents, for: category)
+        let money = Money(cents: dollars * 100)
+        settings.setGoalMoney(money, for: category)
         
         // Save to SwiftData
         do {

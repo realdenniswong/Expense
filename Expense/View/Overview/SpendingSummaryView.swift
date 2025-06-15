@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct SpendingSummaryView: View {
-    let expenseAnalyzer: ExpenseAnalyzer
+    let transactionAnalyzer: TransactionAnalyzer
     let selectedPeriod: TimePeriod
     
     var body: some View {
@@ -46,60 +46,59 @@ struct SpendingSummaryView: View {
     }
     
     // MARK: - Computed Properties
-    
     private var mainPeriodTitle: String {
         switch selectedPeriod {
-        case .daily: return expenseAnalyzer.dailyDisplayName
-        case .weekly: return expenseAnalyzer.weeklyDisplayName
-        case .monthly: return expenseAnalyzer.monthlyDisplayName
+        case .daily: return transactionAnalyzer.dailyDisplayName
+        case .weekly: return transactionAnalyzer.weeklyDisplayName
+        case .monthly: return transactionAnalyzer.monthlyDisplayName
         }
     }
     
-    private var mainPeriodAmount: Int {
+    private var mainPeriodAmount: Money {
         switch selectedPeriod {
-        case .daily: return expenseAnalyzer.todayAmount
-        case .weekly: return expenseAnalyzer.thisWeekAmount
-        case .monthly: return expenseAnalyzer.thisMonthAmount
+        case .daily: return transactionAnalyzer.todayAmount
+        case .weekly: return transactionAnalyzer.thisWeekAmount
+        case .monthly: return transactionAnalyzer.thisMonthAmount
         }
     }
     
     private var leftPeriodTitle: String {
         switch selectedPeriod {
-        case .daily: return expenseAnalyzer.weeklyDisplayName
-        case .weekly: return expenseAnalyzer.dailyDisplayName
-        case .monthly: return expenseAnalyzer.dailyDisplayName
+        case .daily: return transactionAnalyzer.weeklyDisplayName
+        case .weekly: return transactionAnalyzer.dailyDisplayName
+        case .monthly: return transactionAnalyzer.dailyDisplayName
         }
     }
     
-    private var leftPeriodAmount: Int {
+    private var leftPeriodAmount: Money {
         switch selectedPeriod {
-        case .daily: return expenseAnalyzer.thisWeekAmount
-        case .weekly: return expenseAnalyzer.todayAmount
-        case .monthly: return expenseAnalyzer.todayAmount
+        case .daily: return transactionAnalyzer.thisWeekAmount
+        case .weekly: return transactionAnalyzer.todayAmount
+        case .monthly: return transactionAnalyzer.todayAmount
         }
     }
     
     private var rightPeriodTitle: String {
         switch selectedPeriod {
-        case .daily: return expenseAnalyzer.monthlyDisplayName
-        case .weekly: return expenseAnalyzer.monthlyDisplayName
-        case .monthly: return expenseAnalyzer.weeklyDisplayName
+        case .daily: return transactionAnalyzer.monthlyDisplayName
+        case .weekly: return transactionAnalyzer.monthlyDisplayName
+        case .monthly: return transactionAnalyzer.weeklyDisplayName
         }
     }
     
-    private var rightPeriodAmount: Int {
+    private var rightPeriodAmount: Money {
         switch selectedPeriod {
-        case .daily: return expenseAnalyzer.thisMonthAmount
-        case .weekly: return expenseAnalyzer.thisMonthAmount
-        case .monthly: return expenseAnalyzer.thisWeekAmount
+        case .daily: return transactionAnalyzer.thisMonthAmount
+        case .weekly: return transactionAnalyzer.thisMonthAmount
+        case .monthly: return transactionAnalyzer.thisWeekAmount
         }
     }
 }
 
-// MARK: - Main Period View (Top, Large)
+// MARK: - Updated Period Views (Use Money type)
 struct MainPeriodView: View {
     let title: String
-    let amount: Int
+    let amount: Money
     let isSelected: Bool
     
     var body: some View {
@@ -109,7 +108,7 @@ struct MainPeriodView: View {
                 .fontWeight(.medium)
                 .foregroundColor(isSelected ? .blue : .secondary)
             
-            Text(amount.currencyString(symbol: "HK$"))
+            Text(amount.formatted)
                 .font(.system(size: 24, weight: .bold, design: .rounded))
                 .foregroundColor(.primary)
                 .monospacedDigit()
@@ -117,10 +116,9 @@ struct MainPeriodView: View {
     }
 }
 
-// MARK: - Secondary Period View (Bottom, Smaller)
 struct SecondaryPeriodView: View {
     let title: String
-    let amount: Int
+    let amount: Money
     
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -130,7 +128,7 @@ struct SecondaryPeriodView: View {
                 .foregroundColor(.secondary)
                 .lineLimit(1)
             
-            Text(amount.currencyString(symbol: "HK$"))
+            Text(amount.formatted)
                 .font(.system(size: 16, weight: .semibold, design: .rounded))
                 .foregroundColor(.primary)
                 .monospacedDigit()

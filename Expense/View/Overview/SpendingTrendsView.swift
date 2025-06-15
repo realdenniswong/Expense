@@ -9,23 +9,22 @@ import SwiftUI
 import Charts
 
 struct SpendingTrendsView: View {
-
-    let expenseAnalyzer: ExpenseAnalyzer
+    let transactionAnalyzer: TransactionAnalyzer
     
-    private var expenses: [Expense] {
-        expenseAnalyzer.expenses
+    private var transactions: [Transaction] {
+        transactionAnalyzer.transactions
     }
     
     private var selectedPeriod: TimePeriod {
-        expenseAnalyzer.period
+        transactionAnalyzer.period
     }
     
     private var selectedDate: Date {
-        expenseAnalyzer.selectedDate
+        transactionAnalyzer.selectedDate
     }
     
     private var settings: Settings? {
-        expenseAnalyzer.settings
+        transactionAnalyzer.settings
     }
     
     private var trendData: [TrendData] {
@@ -49,20 +48,20 @@ struct SpendingTrendsView: View {
             let dayStart = calendar.startOfDay(for: dayDate)
             let dayEnd = calendar.date(byAdding: .day, value: 1, to: dayStart) ?? dayStart
             
-            let dayExpenses = expenses.filter { expense in
-                expense.date >= dayStart && expense.date < dayEnd
+            let dayTransactions = transactions.filter { transaction in
+                transaction.date >= dayStart && transaction.date < dayEnd
             }
             
             // Filter by enabled categories if settings are available
-            let filteredExpenses: [Expense]
+            let filteredTransactions: [Transaction]
             if let settings = settings {
                 let enabledCategories = Set(settings.enabledCategories(for: .daily))
-                filteredExpenses = dayExpenses.filter { enabledCategories.contains($0.category) }
+                filteredTransactions = dayTransactions.filter { enabledCategories.contains($0.category) }
             } else {
-                filteredExpenses = dayExpenses
+                filteredTransactions = dayTransactions
             }
             
-            let totalAmount = filteredExpenses.reduce(0) { $0 + $1.amountInCents }
+            let totalAmount = filteredTransactions.reduce(Money.zero) { $0 + $1.amount }
             
             let formatter = DateFormatter()
             formatter.dateFormat = "MMM d"
@@ -71,7 +70,7 @@ struct SpendingTrendsView: View {
             days.append(TrendData(
                 startDate: dayStart,
                 endDate: dayEnd,
-                amount: totalAmount,
+                amount: totalAmount.cents,
                 label: dayLabel
             ))
         }
@@ -97,20 +96,20 @@ struct SpendingTrendsView: View {
                 continue
             }
             
-            let weekExpenses = expenses.filter { expense in
-                expense.date >= weekInterval.start && expense.date < weekInterval.end
+            let weekTransactions = transactions.filter { transaction in
+                transaction.date >= weekInterval.start && transaction.date < weekInterval.end
             }
             
             // Filter by enabled categories if settings are available
-            let filteredExpenses: [Expense]
+            let filteredTransactions: [Transaction]
             if let settings = settings {
                 let enabledCategories = Set(settings.enabledCategories(for: .weekly))
-                filteredExpenses = weekExpenses.filter { enabledCategories.contains($0.category) }
+                filteredTransactions = weekTransactions.filter { enabledCategories.contains($0.category) }
             } else {
-                filteredExpenses = weekExpenses
+                filteredTransactions = weekTransactions
             }
             
-            let totalAmount = filteredExpenses.reduce(0) { $0 + $1.amountInCents }
+            let totalAmount = filteredTransactions.reduce(Money.zero) { $0 + $1.amount }
             
             let formatter = DateFormatter()
             formatter.dateFormat = "MMM d"
@@ -119,7 +118,7 @@ struct SpendingTrendsView: View {
             weeks.append(TrendData(
                 startDate: weekInterval.start,
                 endDate: weekInterval.end,
-                amount: totalAmount,
+                amount: totalAmount.cents,
                 label: weekLabel
             ))
         }
@@ -145,20 +144,20 @@ struct SpendingTrendsView: View {
                 continue
             }
             
-            let monthExpenses = expenses.filter { expense in
-                expense.date >= monthInterval.start && expense.date < monthInterval.end
+            let monthTransactions = transactions.filter { transaction in
+                transaction.date >= monthInterval.start && transaction.date < monthInterval.end
             }
             
             // Filter by enabled categories if settings are available
-            let filteredExpenses: [Expense]
+            let filteredTransactions: [Transaction]
             if let settings = settings {
                 let enabledCategories = Set(settings.enabledCategories(for: .monthly))
-                filteredExpenses = monthExpenses.filter { enabledCategories.contains($0.category) }
+                filteredTransactions = monthTransactions.filter { enabledCategories.contains($0.category) }
             } else {
-                filteredExpenses = monthExpenses
+                filteredTransactions = monthTransactions
             }
             
-            let totalAmount = filteredExpenses.reduce(0) { $0 + $1.amountInCents }
+            let totalAmount = filteredTransactions.reduce(Money.zero) { $0 + $1.amount }
             
             let formatter = DateFormatter()
             formatter.dateFormat = "MMM"
@@ -167,7 +166,7 @@ struct SpendingTrendsView: View {
             months.append(TrendData(
                 startDate: monthInterval.start,
                 endDate: monthInterval.end,
-                amount: totalAmount,
+                amount: totalAmount.cents,
                 label: monthLabel
             ))
         }
@@ -175,10 +174,11 @@ struct SpendingTrendsView: View {
         return months
     }
     
-    private var averageSpending: Int {
+    private var averageSpending: Money {
         let nonZeroPeriods = trendData.filter { $0.amount > 0 }
-        guard !nonZeroPeriods.isEmpty else { return 0 }
-        return nonZeroPeriods.reduce(0) { $0 + $1.amount } / nonZeroPeriods.count
+        guard !nonZeroPeriods.isEmpty else { return .zero }
+        let total = nonZeroPeriods.reduce(0) { $0 + $1.amount }
+        return Money(cents: total / nonZeroPeriods.count)
     }
     
     private var trendComparison: (percentage: Int, isIncrease: Bool) {
@@ -195,9 +195,9 @@ struct SpendingTrendsView: View {
     
     private var periodCount: String {
         switch selectedPeriod {
-        case .daily: return "Last 7 days" + (!expenseAnalyzer.periodDisplayName.isEmpty ? " (to \(expenseAnalyzer.periodDisplayName))" : "")
-        case .weekly: return "Last 5 weeks" + (!expenseAnalyzer.periodDisplayName.isEmpty ? " (to \(expenseAnalyzer.periodDisplayName))" : "")
-        case .monthly: return "Last 6 months" + (!expenseAnalyzer.periodDisplayName.isEmpty ? " (to \(expenseAnalyzer.periodDisplayName))" : "")
+        case .daily: return "Last 7 days" + (!transactionAnalyzer.periodDisplayName.isEmpty ? " (to \(transactionAnalyzer.periodDisplayName))" : "")
+        case .weekly: return "Last 5 weeks" + (!transactionAnalyzer.periodDisplayName.isEmpty ? " (to \(transactionAnalyzer.periodDisplayName))" : "")
+        case .monthly: return "Last 6 months" + (!transactionAnalyzer.periodDisplayName.isEmpty ? " (to \(transactionAnalyzer.periodDisplayName))" : "")
         }
     }
     
@@ -218,7 +218,7 @@ struct SpendingTrendsView: View {
                 Spacer()
                 
                 VStack(alignment: .trailing, spacing: 4) {
-                    Text("Avg: \(averageSpending.currencyString(symbol: "HK$"))")
+                    Text("Avg: \(averageSpending.formatted)")
                         .font(.subheadline)
                         .fontWeight(.medium)
                         .foregroundColor(.secondary)

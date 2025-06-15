@@ -6,7 +6,7 @@
 //
 import SwiftUI
 
-struct EmptyStateView : View {
+struct EmptyStateView: View {
     var body: some View {
         VStack(spacing: 20) {
             Spacer()
@@ -42,4 +42,3 @@ struct EmptyStateView : View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
-

@@ -7,70 +7,66 @@
 
 import SwiftUI
 
-// MARK: - Expense Analyzer Helper
-struct ExpenseAnalyzer {
-    let expenses: [Expense]
+struct TransactionAnalyzer {
+    let transactions: [Transaction]
     let period: TimePeriod
     let selectedDate: Date
-    let settings: Settings?  // Optional settings for category filtering
+    let settings: Settings?
     
-    var todayAmount: Int {
+    var todayAmount: Money {
         let calendar = Calendar.current
-        return expenses.filter { expense in
-            calendar.isDate(expense.date, equalTo: selectedDate, toGranularity: .day)
-        }.reduce(0) { $0 + $1.amountInCents }
+        return transactions.filter { transaction in
+            calendar.isDate(transaction.date, equalTo: selectedDate, toGranularity: .day)
+        }.reduce(.zero) { $0 + $1.amount }
     }
     
-    var thisWeekAmount: Int {
+    var thisWeekAmount: Money {
         let calendar = Calendar.current
-        return expenses.filter { expense in
-            calendar.isDate(expense.date, equalTo: selectedDate, toGranularity: .weekOfYear)
-        }.reduce(0) { $0 + $1.amountInCents }
+        return transactions.filter { transaction in
+            calendar.isDate(transaction.date, equalTo: selectedDate, toGranularity: .weekOfYear)
+        }.reduce(.zero) { $0 + $1.amount }
     }
     
-    var thisMonthAmount: Int {
+    var thisMonthAmount: Money {
         let calendar = Calendar.current
-        return expenses.filter { expense in
-            calendar.isDate(expense.date, equalTo: selectedDate, toGranularity: .month)
-        }.reduce(0) { $0 + $1.amountInCents }
+        return transactions.filter { transaction in
+            calendar.isDate(transaction.date, equalTo: selectedDate, toGranularity: .month)
+        }.reduce(.zero) { $0 + $1.amount }
     }
     
-    // Filtered expenses based on selected period AND selected date
-    var filteredExpenses: [Expense] {
+    // Filtered transactions based on selected period AND selected date
+    var filteredTransactions: [Transaction] {
         let calendar = Calendar.current
         
         switch period {
         case .daily:
-            return expenses.filter { expense in
-                calendar.isDate(expense.date, equalTo: selectedDate, toGranularity: .day)
+            return transactions.filter { transaction in
+                calendar.isDate(transaction.date, equalTo: selectedDate, toGranularity: .day)
             }
         case .weekly:
-            // Get the week containing the selected date
             guard let weekInterval = calendar.dateInterval(of: .weekOfYear, for: selectedDate) else {
                 return []
             }
-            return expenses.filter { expense in
-                expense.date >= weekInterval.start && expense.date < weekInterval.end
+            return transactions.filter { transaction in
+                transaction.date >= weekInterval.start && transaction.date < weekInterval.end
             }
         case .monthly:
-            // Get the month containing the selected date
             guard let monthInterval = calendar.dateInterval(of: .month, for: selectedDate) else {
                 return []
             }
-            return expenses.filter { expense in
-                expense.date >= monthInterval.start && expense.date < monthInterval.end
+            return transactions.filter { transaction in
+                transaction.date >= monthInterval.start && transaction.date < monthInterval.end
             }
         }
     }
     
-    // Category spending for filtered period - shows ALL categories (pure analysis)
+    // Category spending for filtered period - shows ALL categories
     var categorySpendingTotals: [CategorySpending] {
-        let categoryTotals = Dictionary(grouping: filteredExpenses, by: { $0.category })
-            .mapValues { expenses in
-                expenses.reduce(0) { $0 + $1.amountInCents }
+        let categoryTotals = Dictionary(grouping: filteredTransactions, by: { $0.category })
+            .mapValues { transactions in
+                transactions.reduce(Money.zero) { $0 + $1.amount }.cents
             }
         
-        // Show all categories that have spending (no filtering by settings)
         let filteredCategoryTotals = categoryTotals.filter { _, amount in
             amount > 0
         }
@@ -89,14 +85,14 @@ struct ExpenseAnalyzer {
     }
     
     // Total spending for goals (only enabled categories)
-    var totalGoalsSpending: Int {
+    var totalGoalsSpending: Money {
         if let settings = settings {
             let enabledCategories = Set(settings.enabledCategories(for: period))
-            return filteredExpenses
+            return filteredTransactions
                 .filter { enabledCategories.contains($0.category) }
-                .reduce(0) { $0 + $1.amountInCents }
+                .reduce(.zero) { $0 + $1.amount }
         } else {
-            return filteredExpenses.reduce(0) { $0 + $1.amountInCents }
+            return filteredTransactions.reduce(.zero) { $0 + $1.amount }
         }
     }
     

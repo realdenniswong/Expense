@@ -10,7 +10,7 @@ import SwiftData
 import UniformTypeIdentifiers
 
 struct DataExportView: View {
-    @Query(sort: \Expense.date, order: .reverse) private var expenses: [Expense]
+    @Query(sort: \Transaction.date, order: .reverse) private var transactions: [Transaction]
     @State private var isExporting = false
     @State private var showingSaveDialog = false
     @State private var exportedData: Data?
@@ -32,7 +32,7 @@ struct DataExportView: View {
                                 .font(.title2)
                                 .fontWeight(.semibold)
                             
-                            Text("\(expenses.count) total expenses")
+                            Text("\(transactions.count) total expenses")
                                 .font(.subheadline)
                                 .foregroundColor(.secondary)
                         }
@@ -101,18 +101,19 @@ struct DataExportView: View {
         
         fileName = "expenses_backup_\(formatDate(Date())).json"
         
-        // Create export data
-        let exportData = ExpenseBackup(
+        // Create export data with new Transaction model
+        let exportData = TransactionBackup(
             exportDate: Date(),
-            totalExpenses: expenses.count,
-            expenses: expenses.map { expense in
-                ExpenseData(
-                    id: expense.id.uuidString,
-                    description: expense.expenseDescription,
-                    amountInCents: expense.amountInCents,
-                    category: expense.category.rawValue,
-                    paymentMethod: expense.method.rawValue,
-                    date: expense.date
+            totalTransactions: transactions.count,
+            appVersion: "2.0.0", // Updated version for new format
+            transactions: transactions.map { transaction in
+                TransactionData(
+                    id: transaction.id.uuidString,
+                    title: transaction.title,
+                    amountCents: transaction.amount.cents,
+                    category: transaction.category.rawValue,
+                    paymentMethod: transaction.paymentMethod.rawValue,
+                    date: transaction.date
                 )
             }
         )
@@ -138,40 +139,5 @@ struct DataExportView: View {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
         return formatter.string(from: date)
-    }
-}
-
-// MARK: - Data Models
-struct ExpenseBackup: Codable {
-    let exportDate: Date
-    let totalExpenses: Int
-    let expenses: [ExpenseData]
-}
-
-struct ExpenseData: Codable {
-    let id: String
-    let description: String
-    let amountInCents: Int
-    let category: String
-    let paymentMethod: String
-    let date: Date
-}
-
-// MARK: - Document for File Export
-struct JSONDocument: FileDocument {
-    static var readableContentTypes: [UTType] { [.json] }
-    
-    var data: Data
-    
-    init(data: Data) {
-        self.data = data
-    }
-    
-    init(configuration: ReadConfiguration) throws {
-        data = configuration.file.regularFileContents ?? Data()
-    }
-    
-    func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper {
-        return FileWrapper(regularFileWithContents: data)
     }
 }

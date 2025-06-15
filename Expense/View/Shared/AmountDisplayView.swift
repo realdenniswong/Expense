@@ -7,9 +7,8 @@
 import SwiftUI
 
 struct AmountDisplayView: View {
-    let amountInCents: Int
+    let amount: Money
     let style: AmountStyle
-    let symbol: String
     
     enum AmountStyle {
         case large      // For main displays
@@ -27,14 +26,13 @@ struct AmountDisplayView: View {
         }
     }
     
-    init(amountInCents: Int, style: AmountStyle = .medium, symbol: String = "HK$") {
-        self.amountInCents = amountInCents
+    init(amount: Money, style: AmountStyle = .medium) {
+        self.amount = amount
         self.style = style
-        self.symbol = symbol
     }
     
     var body: some View {
-        Text(amountInCents.currencyString(symbol: symbol))
+        Text(amount.formatted)
             .font(style.font)
             .monospacedDigit()
     }

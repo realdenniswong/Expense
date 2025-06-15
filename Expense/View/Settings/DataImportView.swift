@@ -10,7 +10,7 @@ import SwiftData
 import UniformTypeIdentifiers
 
 struct DataImportView: View {
-    @Query(sort: \Expense.date, order: .reverse) private var expenses: [Expense]
+    @Query(sort: \Transaction.date, order: .reverse) private var transactions: [Transaction]
     @Environment(\.modelContext) private var modelContext
     @State private var showingFilePicker = false
     @State private var showingAlert = false
@@ -61,7 +61,6 @@ struct DataImportView: View {
                 Text("Only JSON files exported from this app can be imported. Duplicates will be skipped automatically.")
             }
             
-            // MARK: - Instructions Section
             Section {
                 VStack(alignment: .leading, spacing: 12) {
                     Label("Import Process", systemImage: "info.circle")
@@ -122,7 +121,6 @@ struct DataImportView: View {
     
     private func importData(from url: URL) {
         do {
-            // Start accessing the security-scoped resource
             let gotAccess = url.startAccessingSecurityScopedResource()
             defer {
                 if gotAccess {
@@ -133,27 +131,27 @@ struct DataImportView: View {
             let data = try Data(contentsOf: url)
             let decoder = JSONDecoder()
             decoder.dateDecodingStrategy = .iso8601
-            let importData = try decoder.decode(ExpenseBackup.self, from: data)
             
             var importedCount = 0
             var skippedCount = 0
             
-            for expenseItem in importData.expenses {
-                // Check if expense already exists (by ID)
-                let existingExpense = expenses.first { $0.id.uuidString == expenseItem.id }
+            // Only support new format - clean and simple
+            let importData = try decoder.decode(TransactionBackup.self, from: data)
+            
+            for transactionItem in importData.transactions {
+                let existingTransaction = transactions.first { $0.id.uuidString == transactionItem.id }
                 
-                if existingExpense == nil {
-                    // Create new expense
-                    let newExpense = Expense(
-                        id: UUID(uuidString: expenseItem.id) ?? UUID(),
-                        description: expenseItem.description,
-                        amountInCents: expenseItem.amountInCents,
-                        category: ExpenseCategory(rawValue: expenseItem.category) ?? .other,
-                        date: expenseItem.date,
-                        method: PaymentMethod(rawValue: expenseItem.paymentMethod) ?? .cash
+                if existingTransaction == nil {
+                    let newTransaction = Transaction(
+                        id: UUID(uuidString: transactionItem.id) ?? UUID(),
+                        title: transactionItem.title,
+                        amount: Money(cents: transactionItem.amountCents),
+                        category: ExpenseCategory(rawValue: transactionItem.category) ?? .other,
+                        date: transactionItem.date,
+                        paymentMethod: PaymentMethod(rawValue: transactionItem.paymentMethod) ?? .cash
                     )
                     
-                    modelContext.insert(newExpense)
+                    modelContext.insert(newTransaction)
                     importedCount += 1
                 } else {
                     skippedCount += 1
@@ -173,15 +171,9 @@ struct DataImportView: View {
             }
             showingAlert = true
             
-        } catch let error as DecodingError {
-            alertTitle = "Import Failed"
-            alertMessage = "Invalid file format. Please select a valid expense backup file."
-            print("Decoding error: \(error)")
-            showingAlert = true
         } catch {
             alertTitle = "Import Failed"
-            alertMessage = "Unable to read the selected file: \(error.localizedDescription)"
-            print("Import error: \(error)")
+            alertMessage = "Invalid file format or unable to read the selected file."
             showingAlert = true
         }
     }

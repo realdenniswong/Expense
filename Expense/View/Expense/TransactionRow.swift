@@ -7,8 +7,8 @@
 
 import SwiftUI
 
-struct ExpenseRowView: View {
-    let expense: Expense
+struct TransactionRow: View {
+    let transaction: Transaction
     @Environment(\.editMode) private var editMode
     
     private var isEditing: Bool {
@@ -17,14 +17,11 @@ struct ExpenseRowView: View {
     
     var body: some View {
         HStack {
-            // Category Icon
-            CategoryIconView(category: expense.category, size: 48, iconSize: 18)
-                .padding(.trailing, 8) // Adds spacing after the icon
+            CategoryIcon(category: transaction.category, size: 48, iconSize: 18)
+                .padding(.trailing, 8)
             
-            // Expense Details
             VStack(alignment: .leading, spacing: 4) {
-                
-                Text(expense.expenseDescription)
+                Text(transaction.title)
                     .font(.headline)
                     .fontWeight(.semibold)
                     .lineLimit(1)
@@ -32,7 +29,7 @@ struct ExpenseRowView: View {
                 
                 VStack(alignment: .leading, spacing: 0) {
                     HStack(spacing: 4) {
-                        Text(expense.category.rawValue)
+                        Text(transaction.category.rawValue)
                             .font(.caption)
                             .foregroundColor(.secondary)
                             .lineLimit(1)
@@ -40,13 +37,13 @@ struct ExpenseRowView: View {
                             .font(.caption)
                             .foregroundColor(.secondary)
                         
-                        Text(expense.method.rawValue)
+                        Text(transaction.paymentMethod.rawValue)
                             .font(.caption)
                             .foregroundColor(.secondary)
                             .lineLimit(1)
                     }
                     
-                    Text(expense.date.timeString)
+                    Text(transaction.date.timeString)
                         .font(.caption)
                         .fontWeight(.medium)
                         .foregroundColor(.secondary)
@@ -55,10 +52,9 @@ struct ExpenseRowView: View {
             
             Spacer()
             
-            // Amount and Date
-            AmountDisplayView.medium(expense.amountInCents)
+            // Use AmountDisplayView instead of direct Text
+            AmountDisplayView.medium(transaction.amount)
         }
-        // Add extra leading padding when in edit mode to give space for the drag handle
         .padding(.trailing, isEditing ? 10 : 0)
         .animation(.easeInOut(duration: 0.2), value: isEditing)
     }

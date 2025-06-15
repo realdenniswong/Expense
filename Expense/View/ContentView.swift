@@ -9,17 +9,15 @@ import SwiftUI
 import SwiftData
 
 struct ContentView: View {
-    @Query(sort: \Expense.date, order: .reverse) private var expenses: [Expense]
+    @Query(sort: \Transaction.date, order: .reverse) private var transactions: [Transaction]
     @State private var selectedTab = 0
     @Query private var settingsArray: [Settings]
     @Environment(\.modelContext) private var modelContext
     
-    // Get the single settings object, or create one if none exists
     private var settings: Settings {
         if let existingSettings = settingsArray.first {
             return existingSettings
         } else {
-            // Create the single settings object with fixed ID
             let newSettings = Settings()
             modelContext.insert(newSettings)
             try? modelContext.save()
@@ -29,25 +27,21 @@ struct ContentView: View {
     
     var body: some View {
         TabView(selection: $selectedTab) {
-            // Home Tab
             NavigationStack {
-                ExpenseView(expenses: expenses, settings: settings)
-                .navigationTitle("Expense")
-                .navigationBarTitleDisplayMode(.large)
+                ExpenseView(transactions: transactions, settings: settings)
+                    .navigationTitle("Transactions")
+                    .navigationBarTitleDisplayMode(.large)
             }
             .tabItem {
                 Image(systemName: "banknote")
-                Text("Expense")
+                Text("Transactions")
             }
             .tag(0)
             
-            // Browse Tab
             NavigationStack {
-                VStack {
-                    OverviewView(expenses: expenses, settings: settings)
-                }
-                .navigationTitle("Overview")
-                .navigationBarTitleDisplayMode(.large)
+                OverviewView(transactions: transactions, settings: settings)
+                    .navigationTitle("Overview")
+                    .navigationBarTitleDisplayMode(.large)
             }
             .tabItem {
                 Image(systemName: "chart.pie")
@@ -55,23 +49,16 @@ struct ContentView: View {
             }
             .tag(1)
             
-            // Library Tab
             NavigationStack {
-                VStack {
-                    SettingsView(settings: settings)
-                }
-                .navigationTitle("Setting")
-                .navigationBarTitleDisplayMode(.large)
+                SettingsView(settings: settings)
+                    .navigationTitle("Settings")
+                    .navigationBarTitleDisplayMode(.large)
             }
             .tabItem {
                 Image(systemName: "gear")
-                Text("Setting")
+                Text("Settings")
             }
             .tag(2)
         }
     }
 }
-
-// #Preview {
-//    ContentView()
-// }

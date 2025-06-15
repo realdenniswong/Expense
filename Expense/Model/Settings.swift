@@ -22,7 +22,7 @@ class Settings {
     var weeklyGoalCategoriesRaw: Array<String>
     var monthlyGoalCategoriesRaw: Array<String>
     
-    // SAFE: Goal amounts (stored in cents) - OPTIONAL to prevent data loss
+    // Goal amounts (stored in cents) - OPTIONAL to prevent data loss
     var foodDrinkGoalAmount: Int?
     var transportationGoalAmount: Int?
     var shoppingGoalAmount: Int?
@@ -31,7 +31,7 @@ class Settings {
     var healthcareGoalAmount: Int?
     var otherGoalAmount: Int?
     
-    var accountantMode: Bool
+    // REMOVED: var accountantMode: Bool
     
     init(
         id: UUID = UUID(),
@@ -40,8 +40,8 @@ class Settings {
         showMonthlyGoals: Bool = true,
         dailyGoalCategories: Array<ExpenseCategory> = [.foodDrink, .transportation, .entertainment],
         weeklyGoalCategories: Array<ExpenseCategory> = [.foodDrink, .transportation, .shopping, .entertainment, .healthcare],
-        monthlyGoalCategories: Array<ExpenseCategory> = ExpenseCategory.allCases,
-        accountantMode: Bool = false
+        monthlyGoalCategories: Array<ExpenseCategory> = ExpenseCategory.allCases
+        // REMOVED: accountantMode parameter
     ) {
         self.id = id
         self.showDailyGoals = showDailyGoals
@@ -60,7 +60,7 @@ class Settings {
         self.healthcareGoalAmount = nil
         self.otherGoalAmount = nil
         
-        self.accountantMode = accountantMode
+        // REMOVED: self.accountantMode = accountantMode
     }
     
     // MARK: - Computed Properties for ExpenseCategory arrays
@@ -130,9 +130,18 @@ class Settings {
         }
     }
     
+    // MARK: - Money Type Helpers (Added for convenience)
+    
+    func goalMoney(for category: ExpenseCategory) -> Money {
+        Money(cents: goalAmount(for: category))
+    }
+    
+    func setGoalMoney(_ money: Money, for category: ExpenseCategory) {
+        setGoalAmount(money.cents, for: category)
+    }
+    
     // MARK: - Helper Methods
     
-    // Method to check if goals should be shown for a specific period
     func shouldShowGoals(for period: TimePeriod) -> Bool {
         switch period {
         case .daily: return showDailyGoals
@@ -141,7 +150,6 @@ class Settings {
         }
     }
     
-    // Method to get enabled categories for a specific period
     func enabledCategories(for period: TimePeriod) -> Array<ExpenseCategory> {
         switch period {
         case .daily: return dailyGoalCategories
@@ -150,17 +158,14 @@ class Settings {
         }
     }
     
-    // Method to get count of enabled categories for a period
     func enabledCategoriesCount(for period: TimePeriod) -> Int {
         return enabledCategories(for: period).count
     }
     
-    // Method to check if a category is enabled for a specific period
     func isCategoryEnabled(_ category: ExpenseCategory, for period: TimePeriod) -> Bool {
         return enabledCategories(for: period).contains(category)
     }
     
-    // Method to toggle a category for a specific period
     func toggleCategory(_ category: ExpenseCategory, for period: TimePeriod) {
         switch period {
         case .daily:
