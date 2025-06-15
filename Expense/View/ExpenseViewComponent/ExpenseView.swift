@@ -19,21 +19,34 @@ struct ExpenseView: View {
     var body: some View {
         NavigationStack {
             if expenses.isEmpty {
-                ExpenseEmptyStateView()
+                EmptyStateView()
             } else {
-                TransactionListView(groupedExpenses: groupedExpenses(for: expenses), editingExpense: $editingExpense)
+                ExpenseListView(groupedExpenses: groupedExpenses(for: expenses), editingExpense: $editingExpense)
             }
         }
         .background(Color(.systemGroupedBackground))
         .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button(action: {
-                    showingAddExpense = true
-                }) {
-                    Image(systemName: settings.accountantMode ? "book.closed" : "plus")
-                        .font(.title2)
-                        .fontWeight(.medium)
-                }
+            ToolbarItemGroup(placement: .navigationBarTrailing) {
+                HStack(spacing: 16){
+                    
+                    Button(action: {
+                        showingAddExpense = true
+                        settings.accountantMode = false;
+                    }) {
+                        Image(systemName: "plus")
+                            .font(.title2)
+                            .fontWeight(.medium)
+                    }
+                    
+                    Button(action: {
+                        showingAddExpense = true
+                        settings.accountantMode = true;
+                    }) {
+                        Image(systemName: "book.closed")
+                            .font(.system(size: 18))
+                            .fontWeight(.medium)
+                    }
+                }.padding(.horizontal, 8)
             }
         }
         // When creating a transaction

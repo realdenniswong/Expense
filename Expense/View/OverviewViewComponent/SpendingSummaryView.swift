@@ -109,7 +109,7 @@ struct MainPeriodView: View {
                 .fontWeight(.medium)
                 .foregroundColor(isSelected ? .blue : .secondary)
             
-            Text(amount.currencyString)
+            Text(amount.currencyString(symbol: "HK$"))
                 .font(.system(size: 24, weight: .bold, design: .rounded))
                 .foregroundColor(.primary)
                 .monospacedDigit()
@@ -130,7 +130,7 @@ struct SecondaryPeriodView: View {
                 .foregroundColor(.secondary)
                 .lineLimit(1)
             
-            Text(amount.currencyString)
+            Text(amount.currencyString(symbol: "HK$"))
                 .font(.system(size: 16, weight: .semibold, design: .rounded))
                 .foregroundColor(.primary)
                 .monospacedDigit()

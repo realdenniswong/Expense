@@ -85,7 +85,7 @@ struct AddExpenseView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Form {
+                Form {                    
                     // Amount input
                     Section {
                         HStack {
@@ -109,7 +109,7 @@ struct AddExpenseView: View {
                         }
                         
                         // Payment Method Selection
-                        NavigationLink(destination: PaymentSelectionView(paymentMethod: $selectedPayment)) {
+                        NavigationLink(destination: PaymentPickerView(paymentMethod: $selectedPayment)) {
                             HStack {
                                 selectedPayment.icon
                                     .frame(width: 20)
@@ -123,14 +123,17 @@ struct AddExpenseView: View {
                                     .foregroundColor(.secondary)
                             }
                         }
+                    } header: {
+                        Text("Amount")
                     }
+                    
                     
                     // Description
                     Section {
                         TextField("Description (Optional)", text: $description)
                         
                         // Category Selection
-                        NavigationLink(destination: CategorySelectionView(selectedCategory: $selectedCategory)) {
+                        NavigationLink(destination: CategoryPickerView(selectedCategory: $selectedCategory)) {
                             HStack {
                                 selectedCategory.icon
                                     .frame(width: 20)
@@ -144,41 +147,16 @@ struct AddExpenseView: View {
                                     .foregroundColor(.secondary)
                             }
                         }
+                    } header: {
+                        Text("Information")
                     }
                     
                     // Date
                     Section {
                         DatePicker("Date and time", selection: $selectedDate, displayedComponents: [.date, .hourAndMinute])
                             .datePickerStyle(.graphical)
-                    }
-                    
-                    // Record navigation info (only in accountant mode)
-                    if isAccountantMode {
-                        Section {
-                            HStack {
-                                if isAddingNewRecord {
-                                    Text("Adding new expense")
-                                        .font(.subheadline)
-                                        .foregroundColor(.secondary)
-                                } else {
-                                    Text("Editing record \(currentRecordIndex! + 1) of \(allExpenses.count)")
-                                        .font(.subheadline)
-                                        .foregroundColor(.secondary)
-                                }
-                                
-                                Spacer()
-                                
-                                if !isAddingNewRecord {
-                                    Text("Auto-saves")
-                                        .font(.caption)
-                                        .padding(.horizontal, 8)
-                                        .padding(.vertical, 4)
-                                        .background(Color.orange.opacity(0.1))
-                                        .foregroundColor(.orange)
-                                        .cornerRadius(8)
-                                }
-                            }
-                        }
+                    } header: {
+                        Text("Date & Time")
                     }
                 }
                 
@@ -220,6 +198,18 @@ struct AddExpenseView: View {
             .navigationTitle(titleText)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                if(isAccountantMode){
+                    ToolbarItem(placement: .principal){
+                        VStack{
+                            Text("Accountant Mode")
+                                .font(.headline)
+                                .foregroundStyle(.primary)
+                            Text(isAddingNewRecord ? "Adding new expense" : "Editing record \(currentRecordIndex! + 1) of \(allExpenses.count)")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
                 ToolbarItem(placement: .navigationBarLeading) {
                     if isAccountantMode && canGoBack {
                         Button("Previous") {
@@ -249,7 +239,7 @@ struct AddExpenseView: View {
         if !isAccountantMode {
             return expenseToEdit == nil ? "Add Expense" : "Edit Expense"
         } else {
-            return "Accountant Mode"
+            return "" // Accountant mode will use toolbar instead of navigationTitle, for having one line of title and one line of caption.
         }
     }
     

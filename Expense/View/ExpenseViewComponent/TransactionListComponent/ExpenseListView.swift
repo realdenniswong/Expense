@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct TransactionListView: View {
+struct ExpenseListView: View {
     let groupedExpenses: [(String, [Expense])]
     @Binding var editingExpense: Expense?
     @Environment(\.modelContext) private var modelContext
@@ -17,7 +17,7 @@ struct TransactionListView: View {
             ForEach(groupedExpenses, id: \.0) { dateString, expensesForDate in
                 Section(header: Text(dateString)) {
                     ForEach(expensesForDate.sorted(by: { $0.date > $1.date })) { expense in
-                        TransactionRowView(expense: expense)
+                        ExpenseRowView(expense: expense)
                             .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                                 deleteSwipeButton(for: expense)
                                 editSwipeButton(for: expense)

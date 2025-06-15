@@ -13,6 +13,8 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             List {
+                
+                /*
                 Section{
                     HStack {
                         Text("Accountant Mode")
@@ -26,6 +28,7 @@ struct SettingsView: View {
                 } footer: {
                     Text("Accountant mode provides a streamlined interface optimized for quick expense entry. The toolbar shows a book icon instead of a plus, and forms are optimized for professional use.")
                 }
+                */
                 
                 // MARK: - Spending Goals Section
                 Section {

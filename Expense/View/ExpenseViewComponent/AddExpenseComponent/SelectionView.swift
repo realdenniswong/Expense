@@ -1,13 +1,13 @@
 //
-//  SelectionView.swift
+//  PickerView.swift
 //  Expense
 //
 //  Created by Dennis Wong on 14/6/2025.
 //
 import SwiftUI
 
-// Generic reusable selection view
-struct SelectionView<T: CaseIterable & RawRepresentable & Hashable>: View where T.RawValue == String {
+// Generic reusable picker view
+struct PickerView<T: CaseIterable & RawRepresentable & Hashable>: View where T.RawValue == String {
     @Binding var selectedItem: T
     @Environment(\.dismiss) var dismiss
     let title: String
@@ -28,6 +28,13 @@ struct SelectionView<T: CaseIterable & RawRepresentable & Hashable>: View where 
                         .font(.body)
                         .foregroundColor(.primary)
                     Spacer()
+                    
+                    // Show checkmark for selected item
+                    if item == selectedItem {
+                        Image(systemName: "checkmark")
+                            .foregroundColor(.blue)
+                            .font(.body.weight(.semibold))
+                    }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .contentShape(Rectangle())
@@ -35,31 +42,31 @@ struct SelectionView<T: CaseIterable & RawRepresentable & Hashable>: View where 
             .buttonStyle(PlainButtonStyle())
         }
         .navigationTitle(title)
+        .navigationBarTitleDisplayMode(.large)
     }
 }
 
-// Simplified CategorySelectionView
-struct CategorySelectionView: View {
+// Specific implementations using the generic picker
+struct CategoryPickerView: View {
     @Binding var selectedCategory: ExpenseCategory
     
     var body: some View {
-        SelectionView(
+        PickerView(
             selectedItem: $selectedCategory,
-            title: "Select Category",
+            title: "Category",
             iconProvider: { $0.icon },
             colorProvider: { $0.color }
         )
     }
 }
 
-// Simplified PaymentSelectionView
-struct PaymentSelectionView: View {
+struct PaymentPickerView: View {
     @Binding var paymentMethod: PaymentMethod
     
     var body: some View {
-        SelectionView(
+        PickerView(
             selectedItem: $paymentMethod,
-            title: "Select Payment Method",
+            title: "Payment Method",
             iconProvider: { $0.icon },
             colorProvider: { $0.color }
         )

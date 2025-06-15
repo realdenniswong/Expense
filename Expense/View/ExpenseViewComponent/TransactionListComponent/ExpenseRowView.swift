@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct TransactionRowView: View {
+struct ExpenseRowView: View {
     let expense: Expense
     @Environment(\.editMode) private var editMode
     
@@ -56,12 +56,7 @@ struct TransactionRowView: View {
             Spacer()
             
             // Amount and Date
-            VStack(alignment: .trailing, spacing: 4) {
-                Text(expense.amountInCents.currencyString(symbol: "HK$"))
-                    .font(.headline)
-                    .fontWeight(.semibold)
-                    .monospacedDigit()
-            }
+            AmountDisplayView.medium(expense.amountInCents)
         }
         // Add extra leading padding when in edit mode to give space for the drag handle
         .padding(.trailing, isEditing ? 10 : 0)

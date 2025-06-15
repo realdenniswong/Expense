@@ -35,10 +35,7 @@ struct CategoryBreakdownRowView : View {
             Spacer()
             
             // Amount
-            Text(categorySpending.amountInCent.currencyString(symbol: "HK$"))
-                .font(.body)
-                .fontWeight(.semibold)
-                .monospacedDigit()
+            AmountDisplayView.medium(categorySpending.amountInCent)
         }
         .padding(.vertical, 4)
     }
