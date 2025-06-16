@@ -24,8 +24,8 @@ struct ContentView: View {
             return newSettings
         }
     }
-    
     var body: some View {
+        /*
         TabView(selection: $selectedTab) {
             NavigationStack {
                 ExpenseView(transactions: transactions, settings: settings)
@@ -59,6 +59,30 @@ struct ContentView: View {
                 Text("Settings")
             }
             .tag(2)
+        }
+         */
+        TabView {
+            Tab("Expenses", systemImage: "banknote") {
+                NavigationStack {
+                    ExpenseView(transactions: transactions, settings: settings)
+                        .navigationTitle("Transactions")
+                        .navigationBarTitleDisplayMode(.large)
+                }
+            }
+            Tab("Overview", systemImage: "chart.pie") {
+                NavigationStack {
+                    OverviewView(transactions: transactions, settings: settings)
+                        .navigationTitle("Overview")
+                        .navigationBarTitleDisplayMode(.large)
+                }
+            }
+            Tab("Settings", systemImage: "gear") {
+                NavigationStack {
+                    SettingsView(settings: settings)
+                        .navigationTitle("Settings")
+                        .navigationBarTitleDisplayMode(.large)
+                }
+            }
         }
     }
 }

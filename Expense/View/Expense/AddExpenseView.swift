@@ -1,3 +1,10 @@
+//
+//  AddExpenseView.swift
+//  Expense
+//
+//  Created by Dennis Wong on 5/6/2025.
+//
+
 import SwiftUI
 import SwiftData
 
@@ -74,6 +81,7 @@ struct AddExpenseView: View {
                     detailsSection
                     dateSection
                 }
+                .padding(.top, -20)
                 
                 // Success notification overlay
                 if showSuccessMessage {
@@ -162,22 +170,23 @@ struct AddExpenseView: View {
     // ... rest of the methods remain the same (amountSection, detailsSection, etc.)
     
     private var amountSection: some View {
-        Section("Amount") {
+        Section {
             HStack {
                 Text("HK$")
-                    .font(.system(size: 30))
+                    .font(.system(size: 22))
                     .foregroundColor(.secondary)
                 
-                TextField("Amount", text: $amount)
+                TextField("0.00", text: $amount)
                     .keyboardType(.decimalPad)
                     .font(.system(size: 30))
                     .multilineTextAlignment(.trailing)
+                    .monospacedDigit()
                     .focused($isAmountFieldFocused)
                     .onChange(of: amount) { _, newValue in
                         amount = sanitizeAmountInput(newValue)
                     }
             }
-            .padding(.vertical, 8)
+            // .padding(.vertical, 4)
             .contentShape(Rectangle())
             .onTapGesture {
                 isAmountFieldFocused = true
@@ -198,9 +207,8 @@ struct AddExpenseView: View {
     }
     
     private var detailsSection: some View {
-        Section("Information") {
+        Section {
             TextField("Title (Optional)", text: $title)
-            
             NavigationLink(destination: CategoryPickerView(selectedCategory: $selectedCategory)) {
                 HStack {
                     selectedCategory.icon
@@ -216,9 +224,11 @@ struct AddExpenseView: View {
     }
     
     private var dateSection: some View {
-        Section("Date & Time") {
+        Section {
             DatePicker("Date and time", selection: $selectedDate, displayedComponents: [.date, .hourAndMinute])
                 .datePickerStyle(.graphical)
+                .padding(.top, -20)
+                .padding(.bottom, -40)
         }
     }
     
