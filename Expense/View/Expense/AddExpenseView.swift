@@ -14,7 +14,7 @@ struct AddExpenseView: View {
     @Query(sort: \Transaction.date, order: .reverse) private var allTransactions: [Transaction]
     
     let transactionToEdit: Transaction?
-    let accountantMode: Bool  // PARAMETER, not from settings
+    let accountantMode: Bool
     
     @State private var title = ""
     @State private var amount = ""
@@ -37,7 +37,7 @@ struct AddExpenseView: View {
     
     @FocusState private var isAmountFieldFocused: Bool
     
-    // UPDATED INITIALIZERS
+    // MARK: - Initializers
     init(accountantMode: Bool = false) {
         self.transactionToEdit = nil
         self.accountantMode = accountantMode
@@ -48,7 +48,7 @@ struct AddExpenseView: View {
         self.accountantMode = accountantMode
     }
     
-    // Helper computed properties
+    // MARK: - Helper Computed Properties
     private var isAccountantMode: Bool {
         return accountantMode && transactionToEdit == nil
     }
@@ -65,11 +65,89 @@ struct AddExpenseView: View {
         return isAccountantMode && currentRecordIndex != nil && (currentRecordIndex! > 0 || isAddingNewRecord)
     }
     
-    private var rightButtonText: String {
+    // MARK: - Simplified Toolbar Computed Properties
+    private var leadingButtonTitle: String {
+        if isAccountantMode && canGoBack {
+            return "Previous"
+        } else {
+            return "Cancel"
+        }
+    }
+    
+    private var leadingButtonAction: () -> Void {
+        if isAccountantMode && canGoBack {
+            return goToPreviousRecord
+        } else {
+            return { dismiss() }
+        }
+    }
+    
+    private var trailingButtonTitle: String {
         if !isAccountantMode || isAddingNewRecord {
             return "Save"
         } else {
             return "Next"
+        }
+    }
+    
+    private var trailingButtonAction: () -> Void {
+        if isAccountantMode {
+            if isAddingNewRecord {
+                return saveTransaction
+            } else {
+                return goToNextRecord
+            }
+        } else {
+            return saveTransaction
+        }
+    }
+    
+    private var shouldDisableTrailingButton: Bool {
+        return isAddingNewRecord && amount.isEmpty
+    }
+    
+    private var accountantModeSubtitle: String {
+        if isAddingNewRecord {
+            return "Adding new expense"
+        } else {
+            return "Editing record \(allTransactions.count - currentRecordIndex!) of \(allTransactions.count)"
+        }
+    }
+    
+    private var titleText: String {
+        if !isAccountantMode {
+            return transactionToEdit == nil ? "Add Expense" : "Edit Expense"
+        } else {
+            return ""
+        }
+    }
+    
+    // MARK: - Simplified Toolbar Content
+    @ToolbarContentBuilder
+    private var toolbarContent: some ToolbarContent {
+        // Principal item for accountant mode
+        if isAccountantMode {
+            ToolbarItem(placement: .principal) {
+                VStack {
+                    Text("Quick Entry")
+                        .font(.headline)
+                        .foregroundStyle(.primary)
+                    Text(accountantModeSubtitle)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+        
+        // Leading button
+        ToolbarItem(placement: .navigationBarLeading) {
+            Button(leadingButtonTitle, action: leadingButtonAction)
+        }
+        
+        // Trailing button
+        ToolbarItem(placement: .navigationBarTrailing) {
+            Button(trailingButtonTitle, action: trailingButtonAction)
+                .disabled(shouldDisableTrailingButton)
         }
     }
     
@@ -121,37 +199,7 @@ struct AddExpenseView: View {
             .navigationTitle(titleText)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                if isAccountantMode {
-                    ToolbarItem(placement: .principal) {
-                        VStack {
-                            Text("Quick Entry")
-                                .font(.headline)
-                                .foregroundStyle(.primary)
-                            Text(isAddingNewRecord ? "Adding new expense" : "Editing record \(allTransactions.count - currentRecordIndex!) of \(allTransactions.count)")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                }
-                
-                ToolbarItem(placement: .navigationBarLeading) {
-                    if isAccountantMode && canGoBack {
-                        Button("Previous") {
-                            goToPreviousRecord()
-                        }
-                    } else {
-                        Button("Cancel") {
-                            dismiss()
-                        }
-                    }
-                }
-                
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(rightButtonText) {
-                        handleRightButtonTap()
-                    }
-                    .disabled(isAddingNewRecord && amount.isEmpty)
-                }
+                toolbarContent
             }
         }
         .onAppear {
@@ -159,16 +207,7 @@ struct AddExpenseView: View {
         }
     }
     
-    private var titleText: String {
-        if !isAccountantMode {
-            return transactionToEdit == nil ? "Add Expense" : "Edit Expense"
-        } else {
-            return ""
-        }
-    }
-    
-    // ... rest of the methods remain the same (amountSection, detailsSection, etc.)
-    
+    // MARK: - Form Sections
     private var amountSection: some View {
         Section {
             HStack {
@@ -186,7 +225,6 @@ struct AddExpenseView: View {
                         amount = sanitizeAmountInput(newValue)
                     }
             }
-            // .padding(.vertical, 4)
             .contentShape(Rectangle())
             .onTapGesture {
                 isAmountFieldFocused = true
@@ -232,13 +270,10 @@ struct AddExpenseView: View {
         }
     }
     
-    // ... (rest of methods remain the same)
-    
+    // MARK: - Methods
     private func saveCurrentChanges() {
-        // Auto-save current changes before navigating - only if there are actual changes
         guard let editingTransaction = currentEditingTransaction else { return }
         
-        // Check if any values have changed
         let currentDesc = title.isEmpty ? "Untitled" : title
         let originalDesc = originalTitle.isEmpty ? "Untitled" : originalTitle
         
@@ -248,7 +283,6 @@ struct AddExpenseView: View {
                         selectedPayment != originalPayment ||
                         selectedDate != originalDate
         
-        // Only save if there are actual changes
         if hasChanges {
             let money = Money(amount)
             
@@ -265,7 +299,6 @@ struct AddExpenseView: View {
     }
     
     private func goToPreviousRecord() {
-        // Save current changes first
         saveCurrentChanges()
         
         let newIndex: Int
@@ -283,7 +316,6 @@ struct AddExpenseView: View {
     }
     
     private func goToNextRecord() {
-        // Save current changes first
         saveCurrentChanges()
         
         guard let current = currentRecordIndex else { return }
@@ -294,21 +326,8 @@ struct AddExpenseView: View {
             currentEditingTransaction = allTransactions[newIndex]
             loadTransaction(allTransactions[newIndex])
         } else {
-            // Go to "add new" mode
             currentRecordIndex = nil
             clearForm()
-        }
-    }
-    
-    private func handleRightButtonTap() {
-        if isAccountantMode {
-            if isAddingNewRecord {
-                saveTransaction()
-            } else {
-                goToNextRecord()
-            }
-        } else {
-            saveTransaction()
         }
     }
     
@@ -317,7 +336,6 @@ struct AddExpenseView: View {
         let finalTitle = title.isEmpty ? "Untitled" : title
         
         if let existingTransaction = transactionToEdit {
-            // Update existing transaction
             existingTransaction.title = finalTitle
             existingTransaction.amount = money
             existingTransaction.category = selectedCategory
@@ -327,7 +345,6 @@ struct AddExpenseView: View {
             try? modelContext.save()
             dismiss()
         } else {
-            // Create new transaction
             let newTransaction = Transaction(
                 title: finalTitle,
                 amount: money,
@@ -340,26 +357,20 @@ struct AddExpenseView: View {
             try? modelContext.save()
             
             if isAccountantMode {
-                // Reset form for next entry - don't dismiss
                 showSuccessNotification(amount: money, title: finalTitle)
                 resetForm()
             } else {
-                // Normal mode - dismiss the sheet
                 dismiss()
             }
         }
     }
     
     private func resetForm() {
-        // Clear form fields for next entry
         title = ""
         amount = ""
         selectedDate = Date()
         currentRecordIndex = nil
         currentEditingTransaction = nil
-        // Keep category and payment method as they're likely to be reused
-        
-        // Focus back on amount field for quick entry
         isAmountFieldFocused = true
     }
     
@@ -370,7 +381,6 @@ struct AddExpenseView: View {
             showSuccessMessage = true
         }
         
-        // Auto-hide after 1.5 seconds
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
             withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
                 showSuccessMessage = false
@@ -395,7 +405,6 @@ struct AddExpenseView: View {
         selectedDate = transaction.date
         selectedPayment = transaction.paymentMethod
         
-        // Store original values for change tracking
         originalTitle = title
         originalAmount = amount
         originalCategory = transaction.category
@@ -415,8 +424,6 @@ struct AddExpenseView: View {
             isAmountFieldFocused = true
         }
     }
-    
-    // ... (rest of methods remain the same)
     
     private func sanitizeAmountInput(_ value: String) -> String {
         let filtered = value.filter { $0.isNumber || $0 == "." }
