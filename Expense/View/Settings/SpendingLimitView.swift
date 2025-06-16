@@ -1,5 +1,5 @@
 //
-//  GoalAmountsView.swift
+//  SpendingLimitView.swift
 //  Expense
 //
 //  Created by Dennis Wong on [Current Date].
@@ -37,25 +37,18 @@ struct GoalAmountRow: View {
     @FocusState private var isTextFieldFocused: Bool
     
     var body: some View {
-        HStack(spacing: 12) {
-            // Category icon
+        HStack {
+            // Category icon and name
             CategoryIcon(category: category, size: 40, iconSize: 16)
             
-            // Category name
-            VStack(alignment: .leading, spacing: 2) {
-                Text(category.rawValue)
-                    .font(.body)
-                    .fontWeight(.medium)
-                
-                Text("Monthly limit")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
+            Text(category.rawValue)
+                .font(.body)
+                .fontWeight(.medium)
             
             Spacer()
             
-            // Amount input
-            HStack(spacing: 4) {
+            // Amount input - Apple native style
+            HStack(spacing: 2) {
                 Text("HK$")
                     .font(.body)
                     .foregroundColor(.secondary)
@@ -64,8 +57,8 @@ struct GoalAmountRow: View {
                     .keyboardType(.numberPad)
                     .multilineTextAlignment(.trailing)
                     .font(.body)
-                    .fontWeight(.medium)
-                    .frame(width: 80)
+                    .textFieldStyle(.plain)
+                    .frame(width: 60)
                     .focused($isTextFieldFocused)
                     .onSubmit {
                         saveAmount()
@@ -85,6 +78,7 @@ struct GoalAmountRow: View {
                     }
             }
         }
+        .padding(.vertical, -4)
         .contentShape(Rectangle())
         .onTapGesture {
             isTextFieldFocused = true
