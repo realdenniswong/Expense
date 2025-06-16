@@ -24,6 +24,33 @@ struct ExpenseView: View {
         }
         return transactions
     }
+    
+    @ToolbarContentBuilder
+    private var toolbarContent: some ToolbarContent {
+        ToolbarItem(placement: .navigationBarTrailing) {
+            Button(action: {
+                showingAddExpense = true  // Normal mode
+            }) {
+                Image(systemName: "plus")
+                    .font(.title2)
+                    .fontWeight(.medium)
+            }
+        }
+        
+        if #available(iOS 26.0, *) {
+            ToolbarSpacer(.fixed, placement: .navigationBarTrailing)
+        }
+        
+        ToolbarItem(placement: .navigationBarTrailing) {
+            Button(action: {
+                showingQuickEntry = true  // Accountant mode
+            }) {
+                Image(systemName: "book.closed")
+                    .font(.system(size: 18))
+                    .fontWeight(.medium)
+            }
+        }
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -132,6 +159,21 @@ struct ExpenseView: View {
             if filter.activeFilterCount > 0 {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
+                        // Date filter chip
+                        if filter.dateFilterType != .none {
+                            FilterChip(
+                                text: filter.dateFilterType == .custom ?
+                                    filter.dateFilterDisplayText :
+                                    filter.dateFilterType.rawValue,
+                                color: .blue,
+                                onRemove: {
+                                    withAnimation(.easeInOut(duration: 0.2)) {
+                                        filter.dateFilterType = .none
+                                    }
+                                }
+                            )
+                        }
+                        
                         // Category filter chips
                         ForEach(Array(filter.selectedCategories).sorted(by: { $0.rawValue < $1.rawValue }), id: \.self) { category in
                             FilterChip(
@@ -163,6 +205,7 @@ struct ExpenseView: View {
                             withAnimation(.easeInOut(duration: 0.3)) {
                                 filter.selectedCategories.removeAll()
                                 filter.selectedPaymentMethods.removeAll()
+                                filter.dateFilterType = .none
                             }
                         }
                         .font(.caption)
@@ -201,25 +244,7 @@ struct ExpenseView: View {
             }
         }
         .toolbar {
-            ToolbarItemGroup(placement: .navigationBarTrailing) {
-                HStack(spacing: 16) {
-                    Button(action: {
-                        showingAddExpense = true  // Normal mode
-                    }) {
-                        Image(systemName: "plus")
-                            .font(.title2)
-                            .fontWeight(.medium)
-                    }
-                    
-                    Button(action: {
-                        showingQuickEntry = true  // Accountant mode
-                    }) {
-                        Image(systemName: "book.closed")
-                            .font(.system(size: 18))
-                            .fontWeight(.medium)
-                    }
-                }.padding(.horizontal, 8)
-            }
+            toolbarContent
         }
         .sheet(isPresented: $showingAddExpense) {
             AddExpenseView(accountantMode: false)  // Normal mode

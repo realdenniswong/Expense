@@ -11,7 +11,7 @@ struct EmptyChartView: View {
     let period: TimePeriod
     
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 8) {
             Image(systemName: "chart.pie")
                 .font(.system(size: 40))
                 .foregroundColor(.secondary)

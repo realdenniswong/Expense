@@ -26,7 +26,7 @@ struct CategoryChartView: View {
             .chartBackground { chartProxy in
                 Color.clear
             }
-            .frame(height: 350)
+            .frame(height: 320)
             .padding(.horizontal, 10)
             .animation(.easeInOut(duration: 0.3), value: period)
         }

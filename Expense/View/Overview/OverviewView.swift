@@ -87,7 +87,7 @@ struct OverviewView: View {
             showingDatePicker = true
         }) {
             Image(systemName: "calendar")
-                .font(.title2)
+                .font(.system(size: 18))
                 .fontWeight(.medium)
                 .frame(width: 24, height: 24)
         }

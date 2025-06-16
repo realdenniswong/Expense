@@ -7,21 +7,53 @@
 
 import SwiftUI
 
+// MARK: - Date Filter Type
+enum DateFilterType: String, CaseIterable {
+    case none = "All Time"
+    case custom = "Custom Range"
+    
+    var systemImageName: String {
+        switch self {
+        case .none: return "calendar"
+        case .custom: return "calendar.badge.plus"
+        }
+    }
+}
+
 // MARK: - Filter Model
 struct TransactionFilter {
     var searchText: String = ""
     var selectedCategories: Set<ExpenseCategory> = Set()
     var selectedPaymentMethods: Set<PaymentMethod> = Set()
     
+    // Date filtering
+    var dateFilterType: DateFilterType = .none
+    var customStartDate: Date = Calendar.current.date(byAdding: .month, value: -1, to: Date()) ?? Date()
+    var customEndDate: Date = Date()
+    
     var isActive: Bool {
-        !searchText.isEmpty || !selectedCategories.isEmpty || !selectedPaymentMethods.isEmpty
+        !searchText.isEmpty ||
+        !selectedCategories.isEmpty ||
+        !selectedPaymentMethods.isEmpty ||
+        dateFilterType != .none
     }
     
     var activeFilterCount: Int {
         var count = 0
         if !selectedCategories.isEmpty { count += 1 }
         if !selectedPaymentMethods.isEmpty { count += 1 }
+        if dateFilterType != .none { count += 1 }
         return count
+    }
+    
+    // Get the date range for current filter
+    private var dateRange: (start: Date, end: Date)? {
+        switch dateFilterType {
+        case .none:
+            return nil
+        case .custom:
+            return (customStartDate, customEndDate)
+        }
     }
     
     func matches(_ transaction: Transaction) -> Bool {
@@ -47,6 +79,13 @@ struct TransactionFilter {
             return false
         }
         
+        // Date filter
+        if let range = dateRange {
+            if transaction.date < range.start || transaction.date > range.end {
+                return false
+            }
+        }
+        
         return true
     }
     
@@ -54,6 +93,23 @@ struct TransactionFilter {
         searchText = ""
         selectedCategories.removeAll()
         selectedPaymentMethods.removeAll()
+        dateFilterType = .none
+        // Reset custom dates to default range (last month to now)
+        customStartDate = Calendar.current.date(byAdding: .month, value: -1, to: Date()) ?? Date()
+        customEndDate = Date()
+    }
+    
+    // Get display text for current date filter
+    var dateFilterDisplayText: String {
+        switch dateFilterType {
+        case .none:
+            return ""
+        case .custom:
+            let formatter = DateFormatter()
+            formatter.dateStyle = .short
+            formatter.timeStyle = .short
+            return "\(formatter.string(from: customStartDate)) - \(formatter.string(from: customEndDate))"
+        }
     }
 }
 
@@ -65,6 +121,53 @@ struct FilterSheet: View {
     var body: some View {
         NavigationStack {
             List {
+                // Date Filter Section
+                Section {
+                    ForEach(DateFilterType.allCases, id: \.self) { dateType in
+                        DateFilterRow(
+                            dateType: dateType,
+                            isSelected: filter.dateFilterType == dateType
+                        ) {
+                            filter.dateFilterType = dateType
+                        }
+                    }
+                    
+                    // Custom date range picker (only show when custom is selected)
+                    if filter.dateFilterType == .custom {
+                        VStack(spacing: 12) {
+                            DatePicker("From", selection: $filter.customStartDate, displayedComponents: [.date, .hourAndMinute])
+                                .datePickerStyle(.compact)
+                                .onChange(of: filter.customStartDate) { _, newValue in
+                                    // If start date is after end date, update end date
+                                    if newValue > filter.customEndDate {
+                                        filter.customEndDate = Calendar.current.date(byAdding: .hour, value: 1, to: newValue) ?? newValue
+                                    }
+                                }
+                            
+                            DatePicker("To", selection: $filter.customEndDate, in: filter.customStartDate..., displayedComponents: [.date, .hourAndMinute])
+                                .datePickerStyle(.compact)
+                        }
+                        .padding(.vertical, 8)
+                        .transition(.opacity.combined(with: .move(edge: .top)))
+                    }
+                    
+                } header: {
+                    HStack {
+                        Text("Date Range")
+                        Spacer()
+                        if filter.dateFilterType != .none {
+                            Button("Clear") {
+                                filter.dateFilterType = .none
+                                // Reset custom dates to default range
+                                filter.customStartDate = Calendar.current.date(byAdding: .month, value: -1, to: Date()) ?? Date()
+                                filter.customEndDate = Date()
+                            }
+                            .font(.caption)
+                            .foregroundColor(.blue)
+                        }
+                    }
+                }
+                
                 // Categories Section
                 Section {
                     ForEach(ExpenseCategory.allCases, id: \.self) { category in
@@ -90,12 +193,6 @@ struct FilterSheet: View {
                             .font(.caption)
                             .foregroundColor(.blue)
                         }
-                    }
-                } footer: {
-                    if filter.selectedCategories.isEmpty {
-                        Text("All categories will be shown")
-                    } else {
-                        Text("\(filter.selectedCategories.count) categories selected")
                     }
                 }
                 
@@ -125,12 +222,6 @@ struct FilterSheet: View {
                             .foregroundColor(.blue)
                         }
                     }
-                } footer: {
-                    if filter.selectedPaymentMethods.isEmpty {
-                        Text("All payment methods will be shown")
-                    } else {
-                        Text("\(filter.selectedPaymentMethods.count) payment methods selected")
-                    }
                 }
             }
             .navigationTitle("Filter Expenses")
@@ -152,6 +243,38 @@ struct FilterSheet: View {
         }
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
+    }
+}
+
+// MARK: - Date Filter Row Component
+struct DateFilterRow: View {
+    let dateType: DateFilterType
+    let isSelected: Bool
+    let onSelect: () -> Void
+    
+    var body: some View {
+        Button(action: onSelect) {
+            HStack {
+                Image(systemName: dateType.systemImageName)
+                    .foregroundColor(.blue)
+                    .frame(width: 20, height: 20)
+                
+                Text(dateType.rawValue)
+                    .font(.body)
+                    .foregroundColor(.primary)
+                
+                Spacer()
+                
+                if isSelected {
+                    Image(systemName: "checkmark")
+                        .foregroundColor(.blue)
+                        .font(.body.weight(.semibold))
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(PlainButtonStyle())
     }
 }
 
@@ -184,6 +307,7 @@ struct CategoryFilterRow: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(PlainButtonStyle())
+        .padding(.vertical, -4)
     }
 }
 
@@ -244,46 +368,5 @@ struct FilterChip: View {
         .padding(.vertical, 4)
         .background(color.opacity(0.15))
         .cornerRadius(12)
-    }
-}
-
-// MARK: - No Results View
-struct NoResultsView: View {
-    @Binding var filter: TransactionFilter
-    
-    var body: some View {
-        VStack(spacing: 20) {
-            Spacer()
-            
-            VStack(spacing: 16) {
-                Image(systemName: "magnifyingglass")
-                    .font(.system(size: 60))
-                    .foregroundColor(.secondary)
-                
-                Text("No Results Found")
-                    .font(.title2)
-                    .fontWeight(.semibold)
-                    .foregroundColor(.primary)
-                
-                Text("Try adjusting your search or filters")
-                    .font(.body)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 32)
-                
-                Button("Clear Filters") {
-                    filter.clear()
-                }
-                .font(.headline)
-                .foregroundColor(.white)
-                .padding(.horizontal, 24)
-                .padding(.vertical, 12)
-                .background(Color.blue)
-                .cornerRadius(10)
-            }
-            
-            Spacer()
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }

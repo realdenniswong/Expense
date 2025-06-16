@@ -10,6 +10,7 @@ import Charts
 
 struct SpendingTrendsView: View {
     let transactionAnalyzer: TransactionAnalyzer
+    @State private var selectedLabel: String? = nil
     
     private var transactions: [Transaction] {
         transactionAnalyzer.transactions
@@ -218,31 +219,49 @@ struct SpendingTrendsView: View {
                 Spacer()
                 
                 VStack(alignment: .trailing, spacing: 4) {
-                    Text("Avg: \(averageSpending.formatted)")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                        .foregroundColor(.secondary)
-                    
-                    HStack(spacing: 4) {
-                        Text(trendComparison.isIncrease ? "▲" : "▼")
-                            .font(.caption)
-                            .foregroundColor(trendComparison.isIncrease ? .red : .green)
+                    if let selectedLabel = selectedLabel,
+                       let selectedTrend = trendData.first(where: { $0.label == selectedLabel }) {
+                        // Show selected bar value
+                        Text(Money(cents: selectedTrend.amount).formatted)
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.blue)
                         
-                        Text("\(trendComparison.percentage)%")
+                        Text(getDetailedPeriodName(for: selectedTrend))
                             .font(.caption)
                             .fontWeight(.medium)
-                            .foregroundColor(trendComparison.isIncrease ? .red : .green)
+                            .foregroundColor(.blue)
+                    } else {
+                        // Show average and trend
+                        Text("Avg: \(averageSpending.formatted)")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundColor(.secondary)
+                        
+                        HStack(spacing: 4) {
+                            Text(trendComparison.isIncrease ? "▲" : "▼")
+                                .font(.caption)
+                                .foregroundColor(trendComparison.isIncrease ? .red : .green)
+                            
+                            Text("\(trendComparison.percentage)%")
+                                .font(.caption)
+                                .fontWeight(.medium)
+                                .foregroundColor(trendComparison.isIncrease ? .red : .green)
+                        }
                     }
                 }
             }
             
-            // Chart
+            // Chart with proper Charts framework selection
             Chart(trendData, id: \.startDate) { trend in
                 BarMark(
                     x: .value("Period", trend.label),
                     y: .value("Amount", trend.amount/100)
                 )
-                .foregroundStyle(Color.blue.gradient)
+                .foregroundStyle(
+                    selectedLabel == trend.label ?
+                    Color.blue : Color.blue.opacity(0.7)
+                )
                 .cornerRadius(6)
             }
             .frame(height: 200)
@@ -264,9 +283,34 @@ struct SpendingTrendsView: View {
                         .foregroundStyle(.secondary)
                 }
             }
+            .chartXSelection(value: $selectedLabel)
             .animation(.easeInOut(duration: 0.3), value: selectedPeriod)
             .animation(.easeInOut(duration: 0.3), value: selectedDate)
+            .animation(.easeInOut(duration: 0.2), value: selectedLabel)
         }
         .cardBackground()
+        .onTapGesture {
+            // Tap outside chart to deselect
+            selectedLabel = nil
+        }
+    }
+    
+    private func getDetailedPeriodName(for trend: TrendData) -> String {
+        // Create a temporary analyzer for the selected period to get proper display names
+        let tempAnalyzer = TransactionAnalyzer(
+            transactions: transactions,
+            period: selectedPeriod,
+            selectedDate: trend.startDate,
+            settings: settings
+        )
+        
+        switch selectedPeriod {
+        case .daily:
+            return tempAnalyzer.dailyDisplayName
+        case .weekly:
+            return tempAnalyzer.weeklyDisplayName
+        case .monthly:
+            return tempAnalyzer.monthlyDisplayName
+        }
     }
 }

@@ -16,18 +16,15 @@ struct CategoryAnalysisView: View {
     var body: some View {
         let categorySpendingTotals = transactionAnalyzer.categorySpendingTotals
         
-        VStack(alignment: .leading, spacing: 20) {
+        VStack(alignment: .leading, spacing: 0) {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Categories")
                     .font(.headline)
                     .fontWeight(.semibold)
-                    .padding(.horizontal, 20)
-                    .padding(.top, 20)
                 
                 Text(transactionAnalyzer.periodDisplayName)
                     .font(.caption)
                     .foregroundColor(.secondary)
-                    .padding(.horizontal, 20)
             }
 
             // Chart
@@ -44,9 +41,7 @@ struct CategoryAnalysisView: View {
                             CategoryBreakdownRow(categorySpending: categorySpending)
                         }
                     }
-                    .padding(.horizontal, 20)
                 }
-                .padding(.bottom, 20)
             }
         }
         .cardBackground()
