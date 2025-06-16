@@ -22,16 +22,8 @@ class Settings {
     var weeklyGoalCategoriesRaw: Array<String>
     var monthlyGoalCategoriesRaw: Array<String>
     
-    // Goal amounts (stored in cents) - OPTIONAL to prevent data loss
-    var foodDrinkGoalAmount: Int?
-    var transportationGoalAmount: Int?
-    var shoppingGoalAmount: Int?
-    var entertainmentGoalAmount: Int?
-    var billsUtilitiesGoalAmount: Int?
-    var healthcareGoalAmount: Int?
-    var otherGoalAmount: Int?
-    
-    // REMOVED: var accountantMode: Bool
+    // SIMPLIFIED: Single dictionary for all goal amounts (stored in cents)
+    var goalAmounts: [String: Int]
     
     init(
         id: UUID = UUID(),
@@ -41,96 +33,74 @@ class Settings {
         dailyGoalCategories: Array<ExpenseCategory> = [.foodDrink, .transportation, .entertainment],
         weeklyGoalCategories: Array<ExpenseCategory> = [.foodDrink, .transportation, .shopping, .entertainment, .healthcare],
         monthlyGoalCategories: Array<ExpenseCategory> = ExpenseCategory.allCases
-        // REMOVED: accountantMode parameter
     ) {
         self.id = id
         self.showDailyGoals = showDailyGoals
         self.showWeeklyGoals = showWeeklyGoals
         self.showMonthlyGoals = showMonthlyGoals
-        self.dailyGoalCategoriesRaw = dailyGoalCategories.map { category in category.rawValue }
-        self.weeklyGoalCategoriesRaw = weeklyGoalCategories.map { category in category.rawValue }
-        self.monthlyGoalCategoriesRaw = monthlyGoalCategories.map { category in category.rawValue }
+        self.dailyGoalCategoriesRaw = dailyGoalCategories.map { $0.rawValue }
+        self.weeklyGoalCategoriesRaw = weeklyGoalCategories.map { $0.rawValue }
+        self.monthlyGoalCategoriesRaw = monthlyGoalCategories.map { $0.rawValue }
         
-        // Initialize goal amounts as nil (will use defaults)
-        self.foodDrinkGoalAmount = nil
-        self.transportationGoalAmount = nil
-        self.shoppingGoalAmount = nil
-        self.entertainmentGoalAmount = nil
-        self.billsUtilitiesGoalAmount = nil
-        self.healthcareGoalAmount = nil
-        self.otherGoalAmount = nil
-        
-        // REMOVED: self.accountantMode = accountantMode
+        // Initialize with empty dictionary - defaults will be provided by computed property
+        self.goalAmounts = [:]
     }
     
     // MARK: - Computed Properties for ExpenseCategory arrays
     
     var dailyGoalCategories: Array<ExpenseCategory> {
         get {
-            return dailyGoalCategoriesRaw.compactMap { rawValue in
-                ExpenseCategory(rawValue: rawValue)
-            }
+            return dailyGoalCategoriesRaw.compactMap { ExpenseCategory(rawValue: $0) }
         }
         set {
-            dailyGoalCategoriesRaw = newValue.map { category in
-                category.rawValue
-            }
+            dailyGoalCategoriesRaw = newValue.map { $0.rawValue }
         }
     }
     
     var weeklyGoalCategories: Array<ExpenseCategory> {
         get {
-            return weeklyGoalCategoriesRaw.compactMap { rawValue in
-                ExpenseCategory(rawValue: rawValue)
-            }
+            return weeklyGoalCategoriesRaw.compactMap { ExpenseCategory(rawValue: $0) }
         }
         set {
-            weeklyGoalCategoriesRaw = newValue.map { category in
-                category.rawValue
-            }
+            weeklyGoalCategoriesRaw = newValue.map { $0.rawValue }
         }
     }
     
     var monthlyGoalCategories: Array<ExpenseCategory> {
         get {
-            return monthlyGoalCategoriesRaw.compactMap { rawValue in
-                ExpenseCategory(rawValue: rawValue)
-            }
+            return monthlyGoalCategoriesRaw.compactMap { ExpenseCategory(rawValue: $0) }
         }
         set {
-            monthlyGoalCategoriesRaw = newValue.map { category in
-                category.rawValue
-            }
+            monthlyGoalCategoriesRaw = newValue.map { $0.rawValue }
         }
     }
     
-    // MARK: - Goal Amount Helper Methods (with defaults)
+    // MARK: - SIMPLIFIED Goal Amount Methods
     
     func goalAmount(for category: ExpenseCategory) -> Int {
-        switch category {
-        case .foodDrink: return foodDrinkGoalAmount ?? 150000      // HK$1500
-        case .transportation: return transportationGoalAmount ?? 80000   // HK$800
-        case .shopping: return shoppingGoalAmount ?? 100000       // HK$1000
-        case .entertainment: return entertainmentGoalAmount ?? 60000     // HK$600
-        case .billsUtilities: return billsUtilitiesGoalAmount ?? 200000  // HK$2000
-        case .healthcare: return healthcareGoalAmount ?? 50000     // HK$500
-        case .other: return otherGoalAmount ?? 30000              // HK$300
-        }
+        // Return stored value or default
+        return goalAmounts[category.rawValue] ?? defaultGoalAmount(for: category)
     }
     
     func setGoalAmount(_ amount: Int, for category: ExpenseCategory) {
+        goalAmounts[category.rawValue] = amount
+    }
+    
+    // MARK: - Default Goal Amounts
+    
+    private func defaultGoalAmount(for category: ExpenseCategory) -> Int {
         switch category {
-        case .foodDrink: foodDrinkGoalAmount = amount
-        case .transportation: transportationGoalAmount = amount
-        case .shopping: shoppingGoalAmount = amount
-        case .entertainment: entertainmentGoalAmount = amount
-        case .billsUtilities: billsUtilitiesGoalAmount = amount
-        case .healthcare: healthcareGoalAmount = amount
-        case .other: otherGoalAmount = amount
+        case .foodDrink: return 150000       // HK$1500
+        case .transportation: return 80000    // HK$800
+        case .shopping: return 100000        // HK$1000
+        case .entertainment: return 60000     // HK$600
+        case .billsUtilities: return 200000  // HK$2000
+        case .healthcare: return 50000       // HK$500
+        case .other: return 30000            // HK$300
         }
     }
     
-    // MARK: - Money Type Helpers (Added for convenience)
+    // MARK: - Money Type Helpers (for convenience)
     
     func goalMoney(for category: ExpenseCategory) -> Money {
         Money(cents: goalAmount(for: category))
@@ -176,6 +146,7 @@ class Settings {
                 categories.append(category)
             }
             dailyGoalCategories = categories
+            
         case .weekly:
             var categories = weeklyGoalCategories
             if categories.contains(category) {
@@ -184,6 +155,7 @@ class Settings {
                 categories.append(category)
             }
             weeklyGoalCategories = categories
+            
         case .monthly:
             var categories = monthlyGoalCategories
             if categories.contains(category) {
