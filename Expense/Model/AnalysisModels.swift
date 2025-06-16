@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftUI
 
 // Category spending analysis
 struct CategorySpending {
@@ -42,9 +43,56 @@ struct SpendingGoal {
     }
 }
 
-// Time period enumeration
+// SIMPLIFIED: Time period enumeration with built-in configuration
 enum TimePeriod: String, CaseIterable {
     case daily = "Daily"
     case weekly = "Weekly"
     case monthly = "Monthly"
+    
+    // MARK: - UI Configuration (replaces GoalPeriodConfig)
+    
+    var title: String {
+        return "\(rawValue) Goals"
+    }
+    
+    var iconName: String {
+        switch self {
+        case .daily: return "target"
+        case .weekly: return "calendar.badge.clock"
+        case .monthly: return "calendar"
+        }
+    }
+    
+    var iconColor: Color {
+        switch self {
+        case .daily: return .blue
+        case .weekly: return .orange
+        case .monthly: return .green
+        }
+    }
+    
+    var description: String {
+        switch self {
+        case .daily:
+            return "Enable daily spending goals to track frequent expenses like food and transportation."
+        case .weekly:
+            return "Enable weekly spending goals to track moderate frequency expenses like shopping and entertainment."
+        case .monthly:
+            return "Enable monthly spending goals to track all expense categories, including bills and healthcare."
+        }
+    }
+    
+    var categoriesFooter: String {
+        return "Select which expense categories to track \(rawValue.lowercased()) spending goals for."
+    }
+    
+    // MARK: - Period Multipliers for Goal Calculation
+    
+    var periodMultiplier: Double {
+        switch self {
+        case .daily: return 1.0 / 30.0    // Daily goal = monthly goal / 30
+        case .weekly: return 1.0 / 4.0     // Weekly goal = monthly goal / 4
+        case .monthly: return 1.0          // Monthly goal as-is
+        }
+    }
 }

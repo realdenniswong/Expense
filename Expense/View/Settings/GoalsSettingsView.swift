@@ -6,9 +6,8 @@
 //
 import SwiftUI
 
-// MARK: - Reusable Goals Settings View
+// MARK: - Simplified Reusable Goals Settings View
 struct GoalsSettingsView: View {
-    let config: GoalPeriodConfig
     let period: TimePeriod
     @Bindable var settings: Settings
     
@@ -32,33 +31,32 @@ struct GoalsSettingsView: View {
         List {
             Section {
                 HStack {
-                    Image(systemName: config.iconName)
-                        .foregroundColor(config.iconColor)
-                        .frame(width: 24)
+                    ZStack {
+                        Circle()
+                            .fill(period.iconColor.opacity(0.15))
+                            .frame(width: 40, height: 40)
+                        
+                        Image(systemName: period.iconName)
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundColor(period.iconColor)
+                    }
                     
-                    Text("Show \(config.title)")
+                    Text("Show Goals")
                     
                     Spacer()
                     
                     Toggle("", isOn: showGoals)
                 }
+                .padding(.vertical, -4)
             } footer: {
-                Text(config.description)
+                Text(period.description)
             }
             
             if showGoals.wrappedValue {
                 Section {
                     ForEach(ExpenseCategory.allCases, id: \.self) { category in
                         HStack {
-                            ZStack {
-                                Circle()
-                                    .fill(category.color.opacity(0.15))
-                                    .frame(width: 32, height: 32)
-                                
-                                category.icon
-                                    .font(.system(size: 16, weight: .semibold))
-                                    .foregroundColor(category.color)
-                            }
+                            CategoryIcon(category: category, size: 40, iconSize: 16)
                             
                             Text(category.rawValue)
                             
@@ -69,25 +67,26 @@ struct GoalsSettingsView: View {
                                 set: { _ in toggleCategory(category) }
                             ))
                         }
+                        .padding(.vertical, -4)
                     }
                 } header: {
                     Text("Categories")
                 } footer: {
-                    Text(config.categoriesFooter)
+                    Text(period.categoriesFooter)
                 }
             }
         }
-        .navigationTitle(config.title)
+        .navigationTitle(period.title)
         .navigationBarTitleDisplayMode(.large)
     }
 }
 
-// MARK: - Specific Goal Settings Views
+// MARK: - Simplified Specific Goal Settings Views (much cleaner!)
 struct DailyGoalsSettingsView: View {
     @Bindable var settings: Settings
     
     var body: some View {
-        GoalsSettingsView(config: .daily, period: .daily, settings: settings)
+        GoalsSettingsView(period: .daily, settings: settings)
     }
 }
 
@@ -95,7 +94,7 @@ struct WeeklyGoalsSettingsView: View {
     @Bindable var settings: Settings
     
     var body: some View {
-        GoalsSettingsView(config: .weekly, period: .weekly, settings: settings)
+        GoalsSettingsView(period: .weekly, settings: settings)
     }
 }
 
@@ -103,39 +102,6 @@ struct MonthlyGoalsSettingsView: View {
     @Bindable var settings: Settings
     
     var body: some View {
-        GoalsSettingsView(config: .monthly, period: .monthly, settings: settings)
+        GoalsSettingsView(period: .monthly, settings: settings)
     }
-}
-
-// MARK: - Goal Period Configuration
-struct GoalPeriodConfig {
-    let title: String
-    let iconName: String
-    let iconColor: Color
-    let description: String
-    let categoriesFooter: String
-    
-    static let daily = GoalPeriodConfig(
-        title: "Daily Goals",
-        iconName: "target",
-        iconColor: .blue,
-        description: "Enable daily spending goals to track frequent expenses like food and transportation.",
-        categoriesFooter: "Select which expense categories to track daily spending goals for."
-    )
-    
-    static let weekly = GoalPeriodConfig(
-        title: "Weekly Goals",
-        iconName: "calendar.badge.clock",
-        iconColor: .orange,
-        description: "Enable weekly spending goals to track moderate frequency expenses like shopping and entertainment.",
-        categoriesFooter: "Select which expense categories to track weekly spending goals for."
-    )
-    
-    static let monthly = GoalPeriodConfig(
-        title: "Monthly Goals",
-        iconName: "calendar",
-        iconColor: .green,
-        description: "Enable monthly spending goals to track all expense categories, including bills and healthcare.",
-        categoriesFooter: "Select which expense categories to track monthly spending goals for."
-    )
 }
