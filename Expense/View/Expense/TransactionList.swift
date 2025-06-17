@@ -10,6 +10,7 @@ import SwiftUI
 struct TransactionList: View {
     let groupedTransactions: [(String, [Transaction])]
     @Binding var editingTransaction: Transaction?
+    @State private var selectedTransaction: Transaction?
     @Environment(\.modelContext) private var modelContext
     
     var body: some View {
@@ -17,11 +18,14 @@ struct TransactionList: View {
             ForEach(groupedTransactions, id: \.0) { dateString, transactionsForDate in
                 Section(header: Text(dateString)) {
                     ForEach(transactionsForDate.sorted(by: { $0.date > $1.date })) { transaction in
-                        TransactionRow(transaction: transaction)
-                            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                                deleteSwipeButton(for: transaction)
-                                editSwipeButton(for: transaction)
-                            }
+                        TransactionRow(
+                            transaction: transaction,
+                            selectedTransaction: $selectedTransaction
+                        )
+                        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                            deleteSwipeButton(for: transaction)
+                            editSwipeButton(for: transaction)
+                        }
                     }
                 }
             }
@@ -29,6 +33,9 @@ struct TransactionList: View {
         .listStyle(.insetGrouped)
         .scrollContentBackground(.hidden)
         .background(Color(UIColor.systemGroupedBackground))
+        .sheet(item: $selectedTransaction) { transaction in
+            TransactionDetailSheet(transaction: transaction)
+        }
     }
     
     private func deleteSwipeButton(for transaction: Transaction) -> some View {

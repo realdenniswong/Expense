@@ -37,6 +37,10 @@ struct ExpenseView: View {
             }
         }
         
+        if #available(iOS 26.0, *) {
+            ToolbarSpacer(.fixed, placement: .navigationBarTrailing)
+        }
+        
         ToolbarItem(placement: .navigationBarTrailing) {
             Button(action: {
                 showingQuickEntry = true
