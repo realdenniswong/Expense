@@ -1,5 +1,5 @@
 //
-//  TransactionRowView.swift
+//  TransactionRowView.swift - Updated for Swipe Fix
 //  Expense
 //
 //  Created by Dennis Wong on 2/6/2025.
@@ -10,6 +10,7 @@ import SwiftUI
 struct TransactionRow: View {
     let transaction: Transaction
     @Binding var selectedTransaction: Transaction?
+    let onRowTapped: () -> Void // New callback for handling taps
     @Environment(\.editMode) private var editMode
     
     private var isEditing: Bool {
@@ -19,7 +20,7 @@ struct TransactionRow: View {
     var body: some View {
         Button(action: {
             if !isEditing {
-                selectedTransaction = transaction
+                onRowTapped() // Use the callback instead of direct assignment
             }
         }) {
             HStack {
@@ -59,7 +60,6 @@ struct TransactionRow: View {
                 
                 Spacer()
                 
-                // Use AmountDisplayView instead of direct Text
                 AmountDisplayView.medium(transaction.amount)
                     .foregroundColor(.primary)
             }

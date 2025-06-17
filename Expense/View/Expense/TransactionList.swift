@@ -1,5 +1,5 @@
 //
-//  ReorderableExpenseListView.swift
+//  TransactionList.swift - Working Fix
 //  Expense
 //
 //  Created by Dennis Wong on 2/6/2025.
@@ -11,6 +11,7 @@ struct TransactionList: View {
     let groupedTransactions: [(String, [Transaction])]
     @Binding var editingTransaction: Transaction?
     @State private var selectedTransaction: Transaction?
+    @State private var listId = UUID() // Force list refresh
     @Environment(\.modelContext) private var modelContext
     
     var body: some View {
@@ -20,7 +21,17 @@ struct TransactionList: View {
                     ForEach(transactionsForDate.sorted(by: { $0.date > $1.date })) { transaction in
                         TransactionRow(
                             transaction: transaction,
-                            selectedTransaction: $selectedTransaction
+                            selectedTransaction: $selectedTransaction,
+                            onRowTapped: {
+                                // Force refresh the list to close swipe actions
+                                withAnimation(.easeOut(duration: 0.2)) {
+                                    listId = UUID()
+                                }
+                                // Small delay to ensure swipe actions close before showing sheet
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                                    selectedTransaction = transaction
+                                }
+                            }
                         )
                         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                             deleteSwipeButton(for: transaction)
@@ -30,6 +41,7 @@ struct TransactionList: View {
                 }
             }
         }
+        .id(listId) // This forces the list to refresh and close swipe actions
         .listStyle(.insetGrouped)
         .scrollContentBackground(.hidden)
         .background(Color(UIColor.systemGroupedBackground))
