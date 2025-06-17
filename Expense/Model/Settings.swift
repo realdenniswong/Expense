@@ -96,6 +96,7 @@ class Settings {
         case .entertainment: return 60000     // HK$600
         case .billsUtilities: return 200000  // HK$2000
         case .healthcare: return 50000       // HK$500
+        case .fitness: return 70000
         case .other: return 30000            // HK$300
         }
     }

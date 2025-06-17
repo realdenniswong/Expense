@@ -13,8 +13,9 @@ enum ExpenseCategory: String, CaseIterable, Codable {
     case entertainment = "Entertainment"
     case billsUtilities = "Bills & Utilities"
     case healthcare = "Healthcare"
+    case fitness = "Fitness"
     case other = "Other"
-    
+
     var color: Color {
         switch self {
         case .foodDrink: return .orange
@@ -23,6 +24,7 @@ enum ExpenseCategory: String, CaseIterable, Codable {
         case .entertainment: return .cyan
         case .billsUtilities: return .red
         case .healthcare: return .green
+        case .fitness: return .mint
         case .other: return .brown
         }
     }
@@ -35,6 +37,7 @@ enum ExpenseCategory: String, CaseIterable, Codable {
         case .entertainment: return Image(systemName: "tv.fill")
         case .billsUtilities: return Image(systemName: "bolt.fill")
         case .healthcare: return Image(systemName: "cross.fill")
+        case .fitness: return Image(systemName: "dumbbell")
         case .other: return Image(systemName: "ellipsis")
         }
     }
