@@ -248,7 +248,7 @@ struct ExpenseView: View {
         dateFormatter.timeStyle = .none
         
         let grouped = Dictionary(grouping: transactions) { transaction in
-            dateFormatter.string(from: transaction.date)
+            transaction.date.mediumDateString
         }
         
         return grouped.sorted { first, second in

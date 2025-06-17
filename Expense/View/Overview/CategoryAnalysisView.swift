@@ -5,7 +5,6 @@
 //  Created by Dennis Wong on 12/6/2025.
 //
 import SwiftUI
-import Charts
 
 struct CategoryAnalysisView: View {
     let transactionAnalyzer: TransactionAnalyzer
@@ -41,7 +40,9 @@ struct CategoryAnalysisView: View {
                 }
             }
         }
-        .cardBackground()
+        .padding(20)
+        .background(Color(.systemBackground))
+        .cornerRadius(16)
     }
 }
 

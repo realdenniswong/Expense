@@ -157,31 +157,15 @@ struct SpendingTrendsView: View {
                 )
                 .cornerRadius(6)
             }
-            .frame(height: 200)
-            .chartXAxis {
-                AxisMarks(values: .automatic) { _ in
-                    AxisGridLine()
-                    AxisTick()
-                    AxisValueLabel()
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
-            .chartYAxis {
-                AxisMarks { _ in
-                    AxisGridLine()
-                    AxisTick()
-                    AxisValueLabel()
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
+            .barChartStyle()
             .chartXSelection(value: $selectedLabel)
             .animation(.easeInOut(duration: 0.3), value: selectedPeriod)
             .animation(.easeInOut(duration: 0.3), value: selectedDate)
             .animation(.easeInOut(duration: 0.2), value: selectedLabel)
         }
-        .cardBackground()
+        .padding(20)
+        .background(Color(.systemBackground))
+        .cornerRadius(16)
         .onTapGesture {
             selectedLabel = nil
         }

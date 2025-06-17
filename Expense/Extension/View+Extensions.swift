@@ -1,34 +1,74 @@
 //
-//  View+Extensions
+//  View+Extensions.swift
 //  Expense
 //
-//  Created by Dennis Wong on 15/6/2025.
+//  Created by Dennis Wong on 17/6/2025.
 //
-import SwiftUI
 
-extension AmountDisplayView {
-    static func large(_ amount: Money) -> AmountDisplayView {
-        AmountDisplayView(amount: amount, style: .large)
+import SwiftUI
+import Charts
+
+// MARK: - Alert Helper
+struct AlertState {
+    var isShowing = false
+    var title = ""
+    var message = ""
+    
+    mutating func show(title: String, message: String) {
+        self.title = title
+        self.message = message
+        self.isShowing = true
     }
     
-    static func medium(_ amount: Money) -> AmountDisplayView {
-        AmountDisplayView(amount: amount, style: .medium)
+    mutating func success(_ message: String) {
+        show(title: "Success", message: message)
     }
     
-    static func small(_ amount: Money) -> AmountDisplayView {
-        AmountDisplayView(amount: amount, style: .small)
-    }
-    
-    static func compact(_ amount: Money) -> AmountDisplayView {
-        AmountDisplayView(amount: amount, style: .compact)
+    mutating func error(_ message: String) {
+        show(title: "Error", message: message)
     }
 }
 
 extension View {
-    func cardBackground(padding: CGFloat = 20) -> some View {
+    func alertPresentation(_ alertState: Binding<AlertState>) -> some View {
+        alert(alertState.wrappedValue.title, isPresented: alertState.isShowing) {
+            Button("OK") { }
+        } message: {
+            Text(alertState.wrappedValue.message)
+        }
+    }
+    
+    func standardChartStyle() -> some View {
         self
-            .padding(padding)
-            .background(Color(.systemBackground))
-            .cornerRadius(16)
+            .chartXAxis {
+                AxisMarks(values: .automatic) { _ in
+                    AxisGridLine()
+                    AxisTick()
+                    AxisValueLabel()
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .chartYAxis {
+                AxisMarks { _ in
+                    AxisGridLine()
+                    AxisTick()
+                    AxisValueLabel()
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+    }
+    
+    func pieChartStyle() -> some View {
+        self
+            .chartBackground { _ in Color.clear }
+            .frame(height: 320)
+    }
+    
+    func barChartStyle() -> some View {
+        self
+            .frame(height: 200)
+            .standardChartStyle()
     }
 }

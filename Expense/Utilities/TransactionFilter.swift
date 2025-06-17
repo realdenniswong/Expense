@@ -69,7 +69,7 @@ struct TransactionFilter {
         guard let range = dateRange else { return "" }
         let formatter = DateFormatter()
         formatter.dateStyle = .short
-        return "\(formatter.string(from: range.lowerBound)) - \(formatter.string(from: range.upperBound))"
+        return "\(range.lowerBound.shortDateString) - \(range.upperBound.shortDateString)"
     }
 }
 

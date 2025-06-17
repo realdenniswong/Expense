@@ -41,7 +41,9 @@ struct SpendingSummaryView: View {
                 )
             }
         }
-        .cardBackground()
+        .padding(20)
+        .background(Color(.systemBackground))
+        .cornerRadius(16)
         .padding(.top, 8)
     }
     
