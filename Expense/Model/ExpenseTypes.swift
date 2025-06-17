@@ -45,12 +45,14 @@ enum ExpenseCategory: String, CaseIterable, Codable {
 
 enum PaymentMethod: String, CaseIterable, Codable {
     case octopus = "Octopus"
+    case applePay = "Apple Pay"
     case creditCard = "Credit Card"
     case alipay = "Alipay"
     case alipayHK = "Alipay HK"
     case payMe = "PayMe"
     case fps = "FPS"
     case cash = "Cash"
+    
     
     var color: Color {
         switch self {
@@ -61,6 +63,7 @@ enum PaymentMethod: String, CaseIterable, Codable {
         case .payMe: return .red
         case .fps: return .yellow
         case .cash: return .green
+        case .applePay: return .black
         }
     }
     
@@ -80,6 +83,9 @@ enum PaymentMethod: String, CaseIterable, Codable {
             return Image(systemName: "wave.3.right")
         case .alipayHK:
             return Image(systemName: "a.circle")
+        case .applePay:
+            return Image(systemName: "applelogo") // Uses SF Symbol apple logo
         }
     }
 }
+
