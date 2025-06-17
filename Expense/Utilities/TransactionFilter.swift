@@ -7,83 +7,51 @@
 
 import SwiftUI
 
-// MARK: - Date Filter Type
-enum DateFilterType: String, CaseIterable {
-    case none = "All Time"
-    case custom = "Custom Range"
-    
-    var systemImageName: String {
-        switch self {
-        case .none: return "calendar"
-        case .custom: return "calendar.badge.plus"
-        }
-    }
-}
-
-// MARK: - Filter Model
+// MARK: - Simplified Filter Model
 struct TransactionFilter {
     var searchText: String = ""
-    var selectedCategories: Set<ExpenseCategory> = Set()
-    var selectedPaymentMethods: Set<PaymentMethod> = Set()
-    
-    // Date filtering
-    var dateFilterType: DateFilterType = .none
-    var customStartDate: Date = Calendar.current.date(byAdding: .month, value: -1, to: Date()) ?? Date()
-    var customEndDate: Date = Date()
+    var categories: Set<ExpenseCategory> = []
+    var paymentMethods: Set<PaymentMethod> = []
+    var dateRange: ClosedRange<Date>?
     
     var isActive: Bool {
-        !searchText.isEmpty ||
-        !selectedCategories.isEmpty ||
-        !selectedPaymentMethods.isEmpty ||
-        dateFilterType != .none
+        !searchText.isEmpty || !categories.isEmpty || !paymentMethods.isEmpty || dateRange != nil
     }
     
     var activeFilterCount: Int {
         var count = 0
-        if !selectedCategories.isEmpty { count += 1 }
-        if !selectedPaymentMethods.isEmpty { count += 1 }
-        if dateFilterType != .none { count += 1 }
+        if !categories.isEmpty { count += 1 }
+        if !paymentMethods.isEmpty { count += 1 }
+        if dateRange != nil { count += 1 }
         return count
-    }
-    
-    // Get the date range for current filter
-    private var dateRange: (start: Date, end: Date)? {
-        switch dateFilterType {
-        case .none:
-            return nil
-        case .custom:
-            return (customStartDate, customEndDate)
-        }
     }
     
     func matches(_ transaction: Transaction) -> Bool {
         // Search text filter
         if !searchText.isEmpty {
-            let searchLower = searchText.lowercased()
-            let titleMatches = transaction.title.lowercased().contains(searchLower)
-            let categoryMatches = transaction.category.rawValue.lowercased().contains(searchLower)
-            let paymentMatches = transaction.paymentMethod.rawValue.lowercased().contains(searchLower)
+            let search = searchText.lowercased()
+            let titleMatches = transaction.title.lowercased().contains(search)
+            let categoryMatches = transaction.category.rawValue.lowercased().contains(search)
+            let paymentMatches = transaction.paymentMethod.rawValue.lowercased().contains(search)
             
-            if !titleMatches && !categoryMatches && !paymentMatches {
+            guard titleMatches || categoryMatches || paymentMatches else {
                 return false
             }
         }
         
         // Category filter
-        if !selectedCategories.isEmpty && !selectedCategories.contains(transaction.category) {
+        if !categories.isEmpty && !categories.contains(transaction.category) {
             return false
         }
         
         // Payment method filter
-        if !selectedPaymentMethods.isEmpty && !selectedPaymentMethods.contains(transaction.paymentMethod) {
+        if !paymentMethods.isEmpty && !paymentMethods.contains(transaction.paymentMethod) {
             return false
         }
         
         // Date filter
-        if let range = dateRange {
-            if transaction.date < range.start || transaction.date > range.end {
-                return false
-            }
+        if let range = dateRange, !range.contains(transaction.date) {
+            return false
         }
         
         return true
@@ -91,81 +59,68 @@ struct TransactionFilter {
     
     mutating func clear() {
         searchText = ""
-        selectedCategories.removeAll()
-        selectedPaymentMethods.removeAll()
-        dateFilterType = .none
-        // Reset custom dates to default range (last month to now)
-        customStartDate = Calendar.current.date(byAdding: .month, value: -1, to: Date()) ?? Date()
-        customEndDate = Date()
+        categories.removeAll()
+        paymentMethods.removeAll()
+        dateRange = nil
     }
     
-    // Get display text for current date filter
-    var dateFilterDisplayText: String {
-        switch dateFilterType {
-        case .none:
-            return ""
-        case .custom:
-            let formatter = DateFormatter()
-            formatter.dateStyle = .short
-            formatter.timeStyle = .short
-            return "\(formatter.string(from: customStartDate)) - \(formatter.string(from: customEndDate))"
-        }
+    // Helper for date range display
+    var dateRangeDisplayText: String {
+        guard let range = dateRange else { return "" }
+        let formatter = DateFormatter()
+        formatter.dateStyle = .short
+        return "\(formatter.string(from: range.lowerBound)) - \(formatter.string(from: range.upperBound))"
     }
 }
 
-// MARK: - Filter Sheet
+// MARK: - Simplified Filter Sheet
 struct FilterSheet: View {
     @Binding var filter: TransactionFilter
     @Environment(\.dismiss) private var dismiss
+    @State private var tempStartDate = Date()
+    @State private var tempEndDate = Date()
+    @State private var showDatePicker = false
     
     var body: some View {
         NavigationStack {
             List {
                 // Date Filter Section
                 Section {
-                    ForEach(DateFilterType.allCases, id: \.self) { dateType in
-                        DateFilterRow(
-                            dateType: dateType,
-                            isSelected: filter.dateFilterType == dateType
-                        ) {
-                            filter.dateFilterType = dateType
-                        }
-                    }
-                    
-                    // Custom date range picker (only show when custom is selected)
-                    if filter.dateFilterType == .custom {
-                        VStack(spacing: 12) {
-                            DatePicker("From", selection: $filter.customStartDate, displayedComponents: [.date, .hourAndMinute])
-                                .datePickerStyle(.compact)
-                                .onChange(of: filter.customStartDate) { _, newValue in
-                                    // If start date is after end date, update end date
-                                    if newValue > filter.customEndDate {
-                                        filter.customEndDate = Calendar.current.date(byAdding: .hour, value: 1, to: newValue) ?? newValue
-                                    }
-                                }
-                            
-                            DatePicker("To", selection: $filter.customEndDate, in: filter.customStartDate..., displayedComponents: [.date, .hourAndMinute])
-                                .datePickerStyle(.compact)
-                        }
-                        .padding(.vertical, 8)
-                        .transition(.opacity.combined(with: .move(edge: .top)))
-                    }
-                    
-                } header: {
                     HStack {
-                        Text("Date Range")
+                        Image(systemName: "calendar")
+                            .foregroundColor(.blue)
+                            .frame(width: 20)
+                        
+                        if filter.dateRange != nil {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Date Range")
+                                    .font(.body)
+                                Text(filter.dateRangeDisplayText)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        } else {
+                            Text("Date Range")
+                                .font(.body)
+                        }
+                        
                         Spacer()
-                        if filter.dateFilterType != .none {
+                        
+                        if filter.dateRange != nil {
                             Button("Clear") {
-                                filter.dateFilterType = .none
-                                // Reset custom dates to default range
-                                filter.customStartDate = Calendar.current.date(byAdding: .month, value: -1, to: Date()) ?? Date()
-                                filter.customEndDate = Date()
+                                filter.dateRange = nil
                             }
                             .font(.caption)
-                            .foregroundColor(.blue)
+                            .foregroundColor(.red)
                         }
                     }
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        setupDatePicker()
+                        showDatePicker = true
+                    }
+                } header: {
+                    Text("Date")
                 }
                 
                 // Categories Section
@@ -173,12 +128,12 @@ struct FilterSheet: View {
                     ForEach(ExpenseCategory.allCases, id: \.self) { category in
                         CategoryFilterRow(
                             category: category,
-                            isSelected: filter.selectedCategories.contains(category)
+                            isSelected: filter.categories.contains(category)
                         ) { isSelected in
                             if isSelected {
-                                filter.selectedCategories.insert(category)
+                                filter.categories.insert(category)
                             } else {
-                                filter.selectedCategories.remove(category)
+                                filter.categories.remove(category)
                             }
                         }
                     }
@@ -186,9 +141,9 @@ struct FilterSheet: View {
                     HStack {
                         Text("Categories")
                         Spacer()
-                        if !filter.selectedCategories.isEmpty {
+                        if !filter.categories.isEmpty {
                             Button("Clear") {
-                                filter.selectedCategories.removeAll()
+                                filter.categories.removeAll()
                             }
                             .font(.caption)
                             .foregroundColor(.blue)
@@ -201,12 +156,12 @@ struct FilterSheet: View {
                     ForEach(PaymentMethod.allCases, id: \.self) { method in
                         PaymentMethodFilterRow(
                             paymentMethod: method,
-                            isSelected: filter.selectedPaymentMethods.contains(method)
+                            isSelected: filter.paymentMethods.contains(method)
                         ) { isSelected in
                             if isSelected {
-                                filter.selectedPaymentMethods.insert(method)
+                                filter.paymentMethods.insert(method)
                             } else {
-                                filter.selectedPaymentMethods.remove(method)
+                                filter.paymentMethods.remove(method)
                             }
                         }
                     }
@@ -214,9 +169,9 @@ struct FilterSheet: View {
                     HStack {
                         Text("Payment Methods")
                         Spacer()
-                        if !filter.selectedPaymentMethods.isEmpty {
+                        if !filter.paymentMethods.isEmpty {
                             Button("Clear") {
-                                filter.selectedPaymentMethods.removeAll()
+                                filter.paymentMethods.removeAll()
                             }
                             .font(.caption)
                             .foregroundColor(.blue)
@@ -241,44 +196,71 @@ struct FilterSheet: View {
                 }
             }
         }
+        .sheet(isPresented: $showDatePicker) {
+            DateRangePickerSheet(
+                startDate: $tempStartDate,
+                endDate: $tempEndDate,
+                onSave: { start, end in
+                    filter.dateRange = start...end
+                }
+            )
+        }
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
     }
-}
-
-// MARK: - Date Filter Row Component
-struct DateFilterRow: View {
-    let dateType: DateFilterType
-    let isSelected: Bool
-    let onSelect: () -> Void
     
-    var body: some View {
-        Button(action: onSelect) {
-            HStack {
-                Image(systemName: dateType.systemImageName)
-                    .foregroundColor(.blue)
-                    .frame(width: 20, height: 20)
-                
-                Text(dateType.rawValue)
-                    .font(.body)
-                    .foregroundColor(.primary)
-                
-                Spacer()
-                
-                if isSelected {
-                    Image(systemName: "checkmark")
-                        .foregroundColor(.blue)
-                        .font(.body.weight(.semibold))
-                }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .contentShape(Rectangle())
+    private func setupDatePicker() {
+        if let range = filter.dateRange {
+            tempStartDate = range.lowerBound
+            tempEndDate = range.upperBound
+        } else {
+            tempEndDate = Date()
+            tempStartDate = Calendar.current.date(byAdding: .month, value: -1, to: tempEndDate) ?? tempEndDate
         }
-        .buttonStyle(PlainButtonStyle())
     }
 }
 
-// MARK: - Filter Row Components
+// MARK: - Simplified Date Range Picker
+struct DateRangePickerSheet: View {
+    @Binding var startDate: Date
+    @Binding var endDate: Date
+    let onSave: (Date, Date) -> Void
+    @Environment(\.dismiss) private var dismiss
+    
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 20) {
+                DatePicker("From", selection: $startDate, displayedComponents: [.date])
+                    .datePickerStyle(.graphical)
+                
+                DatePicker("To", selection: $endDate, in: startDate..., displayedComponents: [.date])
+                    .datePickerStyle(.graphical)
+                
+                Spacer()
+            }
+            .padding()
+            .navigationTitle("Select Date Range")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+                
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        onSave(startDate, endDate)
+                        dismiss()
+                    }
+                }
+            }
+        }
+        .presentationDetents([.large])
+    }
+}
+
+// MARK: - Filter Row Components (Simplified)
 struct CategoryFilterRow: View {
     let category: ExpenseCategory
     let isSelected: Bool
@@ -303,11 +285,9 @@ struct CategoryFilterRow: View {
                         .font(.body.weight(.semibold))
                 }
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
             .contentShape(Rectangle())
         }
         .buttonStyle(PlainButtonStyle())
-        .padding(.vertical, -4)
     }
 }
 
@@ -337,14 +317,13 @@ struct PaymentMethodFilterRow: View {
                         .font(.body.weight(.semibold))
                 }
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
             .contentShape(Rectangle())
         }
         .buttonStyle(PlainButtonStyle())
     }
 }
 
-// MARK: - Filter Chip Component
+// MARK: - Filter Chip Component (Simplified)
 struct FilterChip: View {
     let text: String
     let color: Color

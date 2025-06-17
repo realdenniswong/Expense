@@ -11,7 +11,7 @@ struct ExpenseView: View {
     let transactions: [Transaction]
     let settings: Settings
     @State private var showingAddExpense = false
-    @State private var showingQuickEntry = false  // Separate state for accountant mode
+    @State private var showingQuickEntry = false
     @State private var editingTransaction: Transaction? = nil
     @State private var filter = TransactionFilter()
     @State private var showingFilterSheet = false
@@ -29,7 +29,7 @@ struct ExpenseView: View {
     private var toolbarContent: some ToolbarContent {
         ToolbarItem(placement: .navigationBarTrailing) {
             Button(action: {
-                showingAddExpense = true  // Normal mode
+                showingAddExpense = true
             }) {
                 Image(systemName: "plus")
                     .font(.title2)
@@ -37,13 +37,9 @@ struct ExpenseView: View {
             }
         }
         
-        if #available(iOS 26.0, *) {
-            ToolbarSpacer(.fixed, placement: .navigationBarTrailing)
-        }
-        
         ToolbarItem(placement: .navigationBarTrailing) {
             Button(action: {
-                showingQuickEntry = true  // Accountant mode
+                showingQuickEntry = true
             }) {
                 Image(systemName: "book.closed")
                     .font(.system(size: 18))
@@ -54,16 +50,12 @@ struct ExpenseView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // 🔍 CUSTOM SEARCH BAR - Files App Style
             HStack(spacing: 8) {
-                // Search bar (shrinks when buttons appear)
                 HStack(spacing: 8) {
-                    // Magnifying glass icon
                     Image(systemName: "magnifyingglass")
                         .foregroundColor(.secondary)
                         .font(.system(size: 17, weight: .medium))
                     
-                    // Search text field
                     TextField("Search expenses", text: $filter.searchText)
                         .textFieldStyle(PlainTextFieldStyle())
                         .font(.system(size: 17))
@@ -74,7 +66,6 @@ struct ExpenseView: View {
                             isSearchFieldFocused = true
                         }
                     
-                    // Clear button (only shows when there's text)
                     if !filter.searchText.isEmpty {
                         Button(action: {
                             filter.searchText = ""
@@ -89,7 +80,7 @@ struct ExpenseView: View {
                 .padding(.horizontal, 12)
                 .padding(.vertical, 10)
                 .background(Color(.systemBackground))
-                .cornerRadius(.infinity) // Maximum roundness
+                .cornerRadius(.infinity)
                 .onTapGesture {
                     isSearchFieldFocused = true
                 }
@@ -99,7 +90,6 @@ struct ExpenseView: View {
                     }
                 }
                 
-                // Filter button (appears when searching OR when filters are active)
                 if isSearching || filter.activeFilterCount > 0 {
                     Button(action: {
                         showingFilterSheet = true
@@ -122,14 +112,13 @@ struct ExpenseView: View {
                         }
                         .foregroundColor(filter.isActive ? .blue : .primary)
                         .padding(.horizontal, 12)
-                        .padding(.vertical, 10) // Match search bar height
+                        .padding(.vertical, 10)
                         .background(Color(.systemGray5))
-                        .cornerRadius(.infinity) // Maximum roundness
+                        .cornerRadius(.infinity)
                     }
                     .transition(.move(edge: .trailing).combined(with: .opacity))
                 }
                 
-                // Cancel button (X button - only shows when actively searching)
                 if isSearching {
                     Button(action: {
                         filter.searchText = ""
@@ -141,7 +130,7 @@ struct ExpenseView: View {
                         Image(systemName: "xmark")
                             .font(.system(size: 14, weight: .semibold))
                             .foregroundColor(.secondary)
-                            .frame(width: 40, height: 40) // Match search bar height
+                            .frame(width: 40, height: 40)
                             .background(Color(.systemGray5))
                             .clipShape(Circle())
                     }
@@ -155,57 +144,48 @@ struct ExpenseView: View {
             .animation(.easeInOut(duration: 0.25), value: filter.searchText.isEmpty)
             .animation(.easeInOut(duration: 0.25), value: filter.activeFilterCount)
             
-            // Filter chips (only when active)
             if filter.activeFilterCount > 0 {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
-                        // Date filter chip
-                        if filter.dateFilterType != .none {
+                        if filter.dateRange != nil {
                             FilterChip(
-                                text: filter.dateFilterType == .custom ?
-                                    filter.dateFilterDisplayText :
-                                    filter.dateFilterType.rawValue,
+                                text: filter.dateRangeDisplayText,
                                 color: .blue,
                                 onRemove: {
                                     withAnimation(.easeInOut(duration: 0.2)) {
-                                        filter.dateFilterType = .none
+                                        filter.dateRange = nil
                                     }
                                 }
                             )
                         }
                         
-                        // Category filter chips
-                        ForEach(Array(filter.selectedCategories).sorted(by: { $0.rawValue < $1.rawValue }), id: \.self) { category in
+                        ForEach(Array(filter.categories).sorted(by: { $0.rawValue < $1.rawValue }), id: \.self) { category in
                             FilterChip(
                                 text: category.rawValue,
                                 color: category.color,
                                 onRemove: {
                                     withAnimation(.easeInOut(duration: 0.2)) {
-                                        _ = filter.selectedCategories.remove(category)
+                                        _ = filter.categories.remove(category)
                                     }
                                 }
                             )
                         }
                         
-                        // Payment method filter chips
-                        ForEach(Array(filter.selectedPaymentMethods).sorted(by: { $0.rawValue < $1.rawValue }), id: \.self) { method in
+                        ForEach(Array(filter.paymentMethods).sorted(by: { $0.rawValue < $1.rawValue }), id: \.self) { method in
                             FilterChip(
                                 text: method.rawValue,
                                 color: method.color,
                                 onRemove: {
                                     withAnimation(.easeInOut(duration: 0.2)) {
-                                        _ = filter.selectedPaymentMethods.remove(method)
+                                        _ = filter.paymentMethods.remove(method)
                                     }
                                 }
                             )
                         }
                         
-                        // Clear all button
                         Button("Clear All") {
                             withAnimation(.easeInOut(duration: 0.3)) {
-                                filter.selectedCategories.removeAll()
-                                filter.selectedPaymentMethods.removeAll()
-                                filter.dateFilterType = .none
+                                filter.clear()
                             }
                         }
                         .font(.caption)
@@ -221,7 +201,6 @@ struct ExpenseView: View {
                 .transition(.opacity.combined(with: .move(edge: .top)))
             }
             
-            // Content
             if filteredTransactions.isEmpty {
                 if filter.isActive {
                     NoResultsView(filter: $filter)
@@ -233,11 +212,11 @@ struct ExpenseView: View {
                     groupedTransactions: groupedTransactions(for: filteredTransactions),
                     editingTransaction: $editingTransaction
                 )
+                .scrollDismissesKeyboard(.immediately)
             }
         }
         .animation(.easeInOut(duration: 0.3), value: filter.activeFilterCount)
         .background(Color(.systemGroupedBackground))
-        // Tap anywhere to dismiss keyboard
         .onTapGesture {
             if isSearchFieldFocused {
                 isSearchFieldFocused = false
@@ -247,18 +226,18 @@ struct ExpenseView: View {
             toolbarContent
         }
         .sheet(isPresented: $showingAddExpense) {
-            AddExpenseView(accountantMode: false)  // Normal mode
+            AddExpenseView(accountantMode: false)
                 .presentationDragIndicator(.visible)
         }
         .sheet(isPresented: $showingQuickEntry) {
-            AddExpenseView(accountantMode: true)   // Accountant mode
+            AddExpenseView(accountantMode: true)
                 .presentationDragIndicator(.visible)
         }
         .sheet(isPresented: $showingFilterSheet) {
             FilterSheet(filter: $filter)
         }
         .sheet(item: $editingTransaction) { transaction in
-            AddExpenseView(transactionToEdit: transaction, accountantMode: false)  // Never accountant mode when editing
+            AddExpenseView(transactionToEdit: transaction, accountantMode: false)
                 .presentationDragIndicator(.visible)
         }
     }

@@ -10,17 +10,12 @@ struct SpendingGoalView: View {
     let transactionAnalyzer: TransactionAnalyzer
     let settings: Settings
     
-    // Get only the categories enabled for the current period
-    private var enabledCategories: [ExpenseCategory] {
+    private var categories: [ExpenseCategory] {
         settings.enabledCategories(for: transactionAnalyzer.period)
     }
     
-    private var periodMultiplier: Double {
-        switch transactionAnalyzer.period {
-        case .daily: return 1.0 / 30.0 // Daily goal = monthly goal / 30
-        case .weekly: return 1.0 / 4.0  // Weekly goal = monthly goal / 4
-        case .monthly: return 1.0       // Monthly goal as-is
-        }
+    private var multiplier: Double {
+        transactionAnalyzer.period.periodMultiplier
     }
     
     private var periodLabel: String {
@@ -31,19 +26,19 @@ struct SpendingGoalView: View {
         }
     }
     
-    private var currentSpending: [ExpenseCategory: Money] {
-        return Dictionary(grouping: transactionAnalyzer.filteredTransactions, by: { $0.category })
+    private var spending: [ExpenseCategory: Money] {
+        Dictionary(grouping: transactionAnalyzer.filteredTransactions, by: \.category)
             .mapValues { transactions in
-                transactions.reduce(Money.zero) { $0 + $1.amount }
+                transactions.reduce(.zero) { $0 + $1.amount }
             }
     }
     
-    private var spendingGoals: [SpendingGoal] {
-        return enabledCategories.compactMap { category in
+    private var goals: [SpendingGoal] {
+        categories.compactMap { category in
             let goalAmount = settings.goalAmount(for: category)
+            let adjustedLimit = Int(Double(goalAmount) * multiplier)
+            let currentSpending = spending[category]?.cents ?? 0
             
-            let adjustedLimit = Int(Double(goalAmount) * periodMultiplier)
-            let currentSpending = self.currentSpending[category]?.cents ?? 0
             return SpendingGoal(
                 category: category,
                 monthlyLimit: adjustedLimit,
@@ -53,18 +48,17 @@ struct SpendingGoalView: View {
     }
     
     private var totalBudget: Money {
-        let sum = enabledCategories.map { settings.goalAmount(for: $0) }.reduce(0, +)
-        return Money(cents: Int(Double(sum) * periodMultiplier))
+        let sum = categories.map { settings.goalAmount(for: $0) }.reduce(0, +)
+        return Money(cents: Int(Double(sum) * multiplier))
     }
     
     private var totalSpent: Money {
-        let total = enabledCategories.reduce(Money.zero) { total, category in
-            total + (currentSpending[category] ?? Money.zero)
+        categories.reduce(.zero) { total, category in
+            total + (spending[category] ?? .zero)
         }
-        return total
     }
     
-    private var overallProgress: Double {
+    private var progress: Double {
         guard totalBudget.cents > 0 else { return 0 }
         return min(Double(totalSpent.cents) / Double(totalBudget.cents), 1.0)
     }
@@ -90,10 +84,10 @@ struct SpendingGoalView: View {
                             .font(.headline)
                             .fontWeight(.semibold)
                         
-                        Text("\(Int(overallProgress * 100))% used")
+                        Text("\(Int(progress * 100))% used")
                             .font(.caption)
                             .fontWeight(.medium)
-                            .foregroundColor(overallProgress > 0.8 ? .red : .secondary)
+                            .foregroundColor(progress > 0.8 ? .red : .secondary)
                     }
                 }
                 
@@ -113,17 +107,17 @@ struct SpendingGoalView: View {
                             .foregroundColor(.secondary)
                     }
                     
-                    ProgressView(value: overallProgress)
-                        .progressViewStyle(LinearProgressViewStyle(tint: overallProgress > 1.0 ? .red : .blue))
+                    ProgressView(value: progress)
+                        .progressViewStyle(LinearProgressViewStyle(tint: progress > 1.0 ? .red : .blue))
                         .scaleEffect(x: 1, y: 1.5, anchor: .center)
                 }
             }
             
-            if !spendingGoals.isEmpty {
+            if !goals.isEmpty {
                 Divider()
                 
                 LazyVStack(spacing: 12) {
-                    ForEach(spendingGoals, id: \.category.rawValue) { goal in
+                    ForEach(goals, id: \.category.rawValue) { goal in
                         SpendingGoalRow(goal: goal)
                     }
                 }

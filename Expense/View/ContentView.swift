@@ -25,42 +25,6 @@ struct ContentView: View {
         }
     }
     var body: some View {
-        /*
-        TabView(selection: $selectedTab) {
-            NavigationStack {
-                ExpenseView(transactions: transactions, settings: settings)
-                    .navigationTitle("Transactions")
-                    .navigationBarTitleDisplayMode(.large)
-            }
-            .tabItem {
-                Image(systemName: "banknote")
-                Text("Transactions")
-            }
-            .tag(0)
-            
-            NavigationStack {
-                OverviewView(transactions: transactions, settings: settings)
-                    .navigationTitle("Overview")
-                    .navigationBarTitleDisplayMode(.large)
-            }
-            .tabItem {
-                Image(systemName: "chart.pie")
-                Text("Overview")
-            }
-            .tag(1)
-            
-            NavigationStack {
-                SettingsView(settings: settings)
-                    .navigationTitle("Settings")
-                    .navigationBarTitleDisplayMode(.large)
-            }
-            .tabItem {
-                Image(systemName: "gear")
-                Text("Settings")
-            }
-            .tag(2)
-        }
-         */
         TabView {
             Tab("Expenses", systemImage: "banknote") {
                 NavigationStack {

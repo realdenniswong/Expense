@@ -24,11 +24,9 @@ struct AddExpenseView: View {
     @State private var showSuccessMessage = false
     @State private var successMessageText = ""
     
-    // Navigation state for accountant mode
     @State private var currentRecordIndex: Int? = nil
     @State private var currentEditingTransaction: Transaction? = nil
     
-    // Change tracking for auto-save optimization
     @State private var originalTitle = ""
     @State private var originalAmount = ""
     @State private var originalCategory = ExpenseCategory.foodDrink
@@ -37,7 +35,6 @@ struct AddExpenseView: View {
     
     @FocusState private var isAmountFieldFocused: Bool
     
-    // MARK: - Initializers
     init(accountantMode: Bool = false) {
         self.transactionToEdit = nil
         self.accountantMode = accountantMode
@@ -48,7 +45,6 @@ struct AddExpenseView: View {
         self.accountantMode = accountantMode
     }
     
-    // MARK: - Helper Computed Properties
     private var isAccountantMode: Bool {
         return accountantMode && transactionToEdit == nil
     }
@@ -65,7 +61,6 @@ struct AddExpenseView: View {
         return isAccountantMode && currentRecordIndex != nil && (currentRecordIndex! > 0 || isAddingNewRecord)
     }
     
-    // MARK: - Simplified Toolbar Computed Properties
     private var leadingButtonTitle: String {
         if isAccountantMode && canGoBack {
             return "Previous"
@@ -122,10 +117,8 @@ struct AddExpenseView: View {
         }
     }
     
-    // MARK: - Simplified Toolbar Content
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
-        // Principal item for accountant mode
         if isAccountantMode {
             ToolbarItem(placement: .principal) {
                 VStack {
@@ -139,12 +132,10 @@ struct AddExpenseView: View {
             }
         }
         
-        // Leading button
         ToolbarItem(placement: .navigationBarLeading) {
             Button(leadingButtonTitle, action: leadingButtonAction)
         }
         
-        // Trailing button
         ToolbarItem(placement: .navigationBarTrailing) {
             Button(trailingButtonTitle, action: trailingButtonAction)
                 .disabled(shouldDisableTrailingButton)
@@ -161,7 +152,6 @@ struct AddExpenseView: View {
                 }
                 .padding(.top, -20)
                 
-                // Success notification overlay
                 if showSuccessMessage {
                     VStack {
                         HStack {
@@ -207,7 +197,6 @@ struct AddExpenseView: View {
         }
     }
     
-    // MARK: - Form Sections
     private var amountSection: some View {
         Section {
             HStack {
@@ -270,7 +259,6 @@ struct AddExpenseView: View {
         }
     }
     
-    // MARK: - Methods
     private func saveCurrentChanges() {
         guard let editingTransaction = currentEditingTransaction else { return }
         

@@ -11,10 +11,7 @@ struct AmountDisplayView: View {
     let style: AmountStyle
     
     enum AmountStyle {
-        case large      // For main displays
-        case medium     // For list items
-        case small      // For secondary info
-        case compact    // For tight spaces
+        case large, medium, small, compact
         
         var font: Font {
             switch self {

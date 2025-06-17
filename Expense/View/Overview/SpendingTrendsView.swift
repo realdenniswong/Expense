@@ -1,5 +1,5 @@
 //
-//  SpendingTrendView.swift
+//  SpendingTrendsView.swift
 //  Expense
 //
 //  Created by Dennis Wong on 12/6/2025.
@@ -12,167 +12,64 @@ struct SpendingTrendsView: View {
     let transactionAnalyzer: TransactionAnalyzer
     @State private var selectedLabel: String? = nil
     
-    private var transactions: [Transaction] {
-        transactionAnalyzer.transactions
-    }
-    
-    private var selectedPeriod: TimePeriod {
-        transactionAnalyzer.period
-    }
-    
-    private var selectedDate: Date {
-        transactionAnalyzer.selectedDate
-    }
-    
-    private var settings: Settings? {
-        transactionAnalyzer.settings
-    }
+    private var transactions: [Transaction] { transactionAnalyzer.transactions }
+    private var selectedPeriod: TimePeriod { transactionAnalyzer.period }
+    private var selectedDate: Date { transactionAnalyzer.selectedDate }
+    private var settings: Settings? { transactionAnalyzer.settings }
     
     private var trendData: [TrendData] {
         switch selectedPeriod {
-        case .daily:
-            return getDailyData()
-        case .weekly:
-            return getWeeklyData()
-        case .monthly:
-            return getMonthlyData()
+        case .daily: return getTrendData(for: .day, periods: 7)
+        case .weekly: return getTrendData(for: .weekOfYear, periods: 5)
+        case .monthly: return getTrendData(for: .month, periods: 6)
         }
     }
     
-    private func getDailyData() -> [TrendData] {
+    // SIMPLIFIED: Single method instead of 3 separate ones
+    private func getTrendData(for component: Calendar.Component, periods: Int) -> [TrendData] {
         let calendar = Calendar.current
-        var days: [TrendData] = []
+        var results: [TrendData] = []
         
-        // Show 7 days ending with selected date
-        for i in 0..<7 {
-            let dayDate = calendar.date(byAdding: .day, value: -(6-i), to: selectedDate) ?? selectedDate
-            let dayStart = calendar.startOfDay(for: dayDate)
-            let dayEnd = calendar.date(byAdding: .day, value: 1, to: dayStart) ?? dayStart
+        for i in 0..<periods {
+            let periodDate: Date
+            let interval: DateInterval
             
-            let dayTransactions = transactions.filter { transaction in
-                transaction.date >= dayStart && transaction.date < dayEnd
+            switch component {
+            case .day:
+                periodDate = calendar.date(byAdding: .day, value: -(periods-1-i), to: selectedDate) ?? selectedDate
+                let start = calendar.startOfDay(for: periodDate)
+                let end = calendar.date(byAdding: .day, value: 1, to: start) ?? start
+                interval = DateInterval(start: start, end: end)
+            case .weekOfYear:
+                let selectedWeekInterval = calendar.dateInterval(of: .weekOfYear, for: selectedDate) ?? DateInterval(start: selectedDate, duration: 0)
+                let weekStart = calendar.date(byAdding: .weekOfYear, value: -(periods-1-i), to: selectedWeekInterval.start) ?? selectedDate
+                interval = calendar.dateInterval(of: .weekOfYear, for: weekStart) ?? DateInterval(start: weekStart, duration: 0)
+            case .month:
+                let selectedMonthInterval = calendar.dateInterval(of: .month, for: selectedDate) ?? DateInterval(start: selectedDate, duration: 0)
+                let monthStart = calendar.date(byAdding: .month, value: -(periods-1-i), to: selectedMonthInterval.start) ?? selectedDate
+                interval = calendar.dateInterval(of: .month, for: monthStart) ?? DateInterval(start: monthStart, duration: 0)
+            default:
+                continue
             }
             
-            // Filter by enabled categories if settings are available
-            let filteredTransactions: [Transaction]
-            if let settings = settings {
-                let enabledCategories = Set(settings.enabledCategories(for: .daily))
-                filteredTransactions = dayTransactions.filter { enabledCategories.contains($0.category) }
-            } else {
-                filteredTransactions = dayTransactions
-            }
-            
+            let periodTransactions = transactions.filter { interval.contains($0.date) }
+            let enabledCategories = settings?.enabledCategories(for: selectedPeriod) ?? ExpenseCategory.allCases
+            let filteredTransactions = periodTransactions.filter { enabledCategories.contains($0.category) }
             let totalAmount = filteredTransactions.reduce(Money.zero) { $0 + $1.amount }
             
             let formatter = DateFormatter()
-            formatter.dateFormat = "MMM d"
-            let dayLabel = formatter.string(from: dayDate)
+            formatter.dateFormat = component == .month ? "MMM" : "MMM d"
+            let label = formatter.string(from: interval.start)
             
-            days.append(TrendData(
-                startDate: dayStart,
-                endDate: dayEnd,
+            results.append(TrendData(
+                startDate: interval.start,
+                endDate: interval.end,
                 amount: totalAmount.cents,
-                label: dayLabel
+                label: label
             ))
         }
         
-        return days
-    }
-    
-    private func getWeeklyData() -> [TrendData] {
-        let calendar = Calendar.current
-        var weeks: [TrendData] = []
-        
-        // Get the week containing selectedDate, then go back 4 more weeks
-        guard let selectedWeekInterval = calendar.dateInterval(of: .weekOfYear, for: selectedDate) else {
-            return []
-        }
-        
-        for i in 0..<5 {
-            guard let weekStart = calendar.date(byAdding: .weekOfYear, value: -(4-i), to: selectedWeekInterval.start) else {
-                continue
-            }
-            
-            guard let weekInterval = calendar.dateInterval(of: .weekOfYear, for: weekStart) else {
-                continue
-            }
-            
-            let weekTransactions = transactions.filter { transaction in
-                transaction.date >= weekInterval.start && transaction.date < weekInterval.end
-            }
-            
-            // Filter by enabled categories if settings are available
-            let filteredTransactions: [Transaction]
-            if let settings = settings {
-                let enabledCategories = Set(settings.enabledCategories(for: .weekly))
-                filteredTransactions = weekTransactions.filter { enabledCategories.contains($0.category) }
-            } else {
-                filteredTransactions = weekTransactions
-            }
-            
-            let totalAmount = filteredTransactions.reduce(Money.zero) { $0 + $1.amount }
-            
-            let formatter = DateFormatter()
-            formatter.dateFormat = "MMM d"
-            let weekLabel = formatter.string(from: weekInterval.start)
-            
-            weeks.append(TrendData(
-                startDate: weekInterval.start,
-                endDate: weekInterval.end,
-                amount: totalAmount.cents,
-                label: weekLabel
-            ))
-        }
-        
-        return weeks
-    }
-    
-    private func getMonthlyData() -> [TrendData] {
-        let calendar = Calendar.current
-        var months: [TrendData] = []
-        
-        // Get the month containing selectedDate, then go back 5 more months
-        guard let selectedMonthInterval = calendar.dateInterval(of: .month, for: selectedDate) else {
-            return []
-        }
-        
-        for i in 0..<6 {
-            guard let monthStart = calendar.date(byAdding: .month, value: -(5-i), to: selectedMonthInterval.start) else {
-                continue
-            }
-            
-            guard let monthInterval = calendar.dateInterval(of: .month, for: monthStart) else {
-                continue
-            }
-            
-            let monthTransactions = transactions.filter { transaction in
-                transaction.date >= monthInterval.start && transaction.date < monthInterval.end
-            }
-            
-            // Filter by enabled categories if settings are available
-            let filteredTransactions: [Transaction]
-            if let settings = settings {
-                let enabledCategories = Set(settings.enabledCategories(for: .monthly))
-                filteredTransactions = monthTransactions.filter { enabledCategories.contains($0.category) }
-            } else {
-                filteredTransactions = monthTransactions
-            }
-            
-            let totalAmount = filteredTransactions.reduce(Money.zero) { $0 + $1.amount }
-            
-            let formatter = DateFormatter()
-            formatter.dateFormat = "MMM"
-            let monthLabel = formatter.string(from: monthStart)
-            
-            months.append(TrendData(
-                startDate: monthInterval.start,
-                endDate: monthInterval.end,
-                amount: totalAmount.cents,
-                label: monthLabel
-            ))
-        }
-        
-        return months
+        return results
     }
     
     private var averageSpending: Money {
@@ -196,15 +93,14 @@ struct SpendingTrendsView: View {
     
     private var periodCount: String {
         switch selectedPeriod {
-        case .daily: return "Last 7 days" + (!transactionAnalyzer.periodDisplayName.isEmpty ? " (to \(transactionAnalyzer.periodDisplayName))" : "")
-        case .weekly: return "Last 5 weeks" + (!transactionAnalyzer.periodDisplayName.isEmpty ? " (to \(transactionAnalyzer.periodDisplayName))" : "")
-        case .monthly: return "Last 6 months" + (!transactionAnalyzer.periodDisplayName.isEmpty ? " (to \(transactionAnalyzer.periodDisplayName))" : "")
+        case .daily: return "Last 7 days"
+        case .weekly: return "Last 5 weeks"
+        case .monthly: return "Last 6 months"
         }
     }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            // Header
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Spending Trends")
@@ -221,7 +117,6 @@ struct SpendingTrendsView: View {
                 VStack(alignment: .trailing, spacing: 4) {
                     if let selectedLabel = selectedLabel,
                        let selectedTrend = trendData.first(where: { $0.label == selectedLabel }) {
-                        // Show selected bar value
                         Text(Money(cents: selectedTrend.amount).formatted)
                             .font(.subheadline)
                             .fontWeight(.semibold)
@@ -232,7 +127,6 @@ struct SpendingTrendsView: View {
                             .fontWeight(.medium)
                             .foregroundColor(.blue)
                     } else {
-                        // Show average and trend
                         Text("Avg: \(averageSpending.formatted)")
                             .font(.subheadline)
                             .fontWeight(.medium)
@@ -252,7 +146,6 @@ struct SpendingTrendsView: View {
                 }
             }
             
-            // Chart with proper Charts framework selection
             Chart(trendData, id: \.startDate) { trend in
                 BarMark(
                     x: .value("Period", trend.label),
@@ -290,13 +183,11 @@ struct SpendingTrendsView: View {
         }
         .cardBackground()
         .onTapGesture {
-            // Tap outside chart to deselect
             selectedLabel = nil
         }
     }
     
     private func getDetailedPeriodName(for trend: TrendData) -> String {
-        // Create a temporary analyzer for the selected period to get proper display names
         let tempAnalyzer = TransactionAnalyzer(
             transactions: transactions,
             period: selectedPeriod,
@@ -305,12 +196,9 @@ struct SpendingTrendsView: View {
         )
         
         switch selectedPeriod {
-        case .daily:
-            return tempAnalyzer.dailyDisplayName
-        case .weekly:
-            return tempAnalyzer.weeklyDisplayName
-        case .monthly:
-            return tempAnalyzer.monthlyDisplayName
+        case .daily: return tempAnalyzer.dailyDisplayName
+        case .weekly: return tempAnalyzer.weeklyDisplayName
+        case .monthly: return tempAnalyzer.monthlyDisplayName
         }
     }
 }

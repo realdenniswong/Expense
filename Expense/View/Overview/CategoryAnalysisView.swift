@@ -7,9 +7,6 @@
 import SwiftUI
 import Charts
 
-import SwiftUI
-import Charts
-
 struct CategoryAnalysisView: View {
     let transactionAnalyzer: TransactionAnalyzer
     
