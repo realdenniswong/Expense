@@ -10,6 +10,9 @@ import SwiftUI
 struct TransactionDetailSheet: View {
     let transaction: Transaction
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var modelContext
+    @State private var showingEditSheet = false
+    @State private var showingDeleteAlert = false
     
     var body: some View {
         NavigationStack {
@@ -62,15 +65,39 @@ struct TransactionDetailSheet: View {
             .navigationTitle("Transaction Details")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Delete", role: .destructive) {
+                        showingDeleteAlert = true
+                    }
+                    .foregroundColor(.red)
+                }
+                
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
-                        dismiss()
+                    Button("Edit") {
+                        showingEditSheet = true
                     }
                 }
             }
         }
         .presentationDetents([.large])
         .presentationDragIndicator(.visible)
+        .sheet(isPresented: $showingEditSheet) {
+            AddExpenseView(transactionToEdit: transaction)
+        }
+        .alert("Delete Transaction", isPresented: $showingDeleteAlert) {
+            Button("Cancel", role: .cancel) { }
+            Button("Delete", role: .destructive) {
+                deleteTransaction()
+            }
+        } message: {
+            Text("Are you sure you want to delete this transaction? This action cannot be undone.")
+        }
+    }
+    
+    private func deleteTransaction() {
+        modelContext.delete(transaction)
+        try? modelContext.save()
+        dismiss()
     }
 }
 
