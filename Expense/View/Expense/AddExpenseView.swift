@@ -13,6 +13,7 @@ struct AddExpenseView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Transaction.date, order: .reverse) private var allTransactions: [Transaction]
     
+    let isEdit: Bool
     let transactionToEdit: Transaction?
     let accountantMode: Bool
     
@@ -38,11 +39,13 @@ struct AddExpenseView: View {
     init(accountantMode: Bool = false) {
         self.transactionToEdit = nil
         self.accountantMode = accountantMode
+        self.isEdit = false
     }
     
     init(transactionToEdit: Transaction, accountantMode: Bool = false) {
         self.transactionToEdit = transactionToEdit
         self.accountantMode = accountantMode
+        self.isEdit = true
     }
     
     private var isAccountantMode: Bool {
@@ -377,8 +380,11 @@ struct AddExpenseView: View {
     }
     
     private func setupInitialState() {
-        if let transaction = transactionToEdit {
-            loadTransaction(transaction)
+        clearForm()
+        if isEdit{
+            if let transaction = transactionToEdit {
+                loadTransaction(transaction)
+            }
         } else if isAccountantMode {
             currentRecordIndex = nil
             currentEditingTransaction = nil
