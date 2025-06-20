@@ -7,6 +7,7 @@
 
 import SwiftUI
 import SwiftData
+import CoreLocation
 
 struct AddExpenseView: View {
     @Environment(\.dismiss) private var dismiss
@@ -21,9 +22,13 @@ struct AddExpenseView: View {
     @State private var amount = ""
     @State private var selectedCategory = ExpenseCategory.foodDrink
     @State private var selectedPayment = PaymentMethod.creditCard
+    @State private var showingPaymentMethodSheet = false
+    @State private var showingCategorySheet = false
     @State private var selectedDate = Date()
     @State private var showSuccessMessage = false
     @State private var successMessageText = ""
+    @State private var selectedLocation: String? = nil
+    @State private var selectedAddress: String? = nil
     
     @State private var currentRecordIndex: Int? = nil
     @State private var currentEditingTransaction: Transaction? = nil
@@ -35,6 +40,8 @@ struct AddExpenseView: View {
     @State private var originalDate = Date()
     
     @FocusState private var isAmountFieldFocused: Bool
+    
+    @State private var showingLocationSheet = false
     
     init(accountantMode: Bool = false) {
         self.transactionToEdit = nil
@@ -64,12 +71,8 @@ struct AddExpenseView: View {
         return isAccountantMode && currentRecordIndex != nil && (currentRecordIndex! > 0 || isAddingNewRecord)
     }
     
-    private var leadingButtonTitle: String {
-        if isAccountantMode && canGoBack {
-            return "Previous"
-        } else {
-            return "Cancel"
-        }
+    private var leadingButtonIconName: String {
+        (isAccountantMode && canGoBack) ? "chevron.left" : "xmark"
     }
     
     private var leadingButtonAction: () -> Void {
@@ -80,12 +83,8 @@ struct AddExpenseView: View {
         }
     }
     
-    private var trailingButtonTitle: String {
-        if !isAccountantMode || isAddingNewRecord {
-            return "Save"
-        } else {
-            return "Next"
-        }
+    private var trailingButtonIconName: String {
+        (!isAccountantMode || isAddingNewRecord) ? "checkmark" : "chevron.right"
     }
     
     private var trailingButtonAction: () -> Void {
@@ -101,7 +100,7 @@ struct AddExpenseView: View {
     }
     
     private var shouldDisableTrailingButton: Bool {
-        return isAddingNewRecord && amount.isEmpty
+        return amount.isEmpty
     }
     
     private var accountantModeSubtitle: String {
@@ -136,12 +135,17 @@ struct AddExpenseView: View {
         }
         
         ToolbarItem(placement: .navigationBarLeading) {
-            Button(leadingButtonTitle, action: leadingButtonAction)
+            Button(action: leadingButtonAction) {
+                Image(systemName: leadingButtonIconName)
+            }
         }
         
         ToolbarItem(placement: .navigationBarTrailing) {
-            Button(trailingButtonTitle, action: trailingButtonAction)
-                .disabled(shouldDisableTrailingButton)
+            Button(action: trailingButtonAction) {
+                Image(systemName: trailingButtonIconName)
+            }
+            .tint(shouldDisableTrailingButton ? .secondary : .accentColor)
+            .disabled(shouldDisableTrailingButton)
         }
     }
     
@@ -149,11 +153,20 @@ struct AddExpenseView: View {
         NavigationStack {
             ZStack {
                 Form {
-                    amountSection
-                    detailsSection
-                    dateSection
+                    Section(header: Text("Amount & Payment")) {
+                        amountSection
+                    }
+                    Section(header: Text("Details")) {
+                        detailsSection
+                    }
+                    Section(header: Text("Location")) {
+                        locationSection
+                    }
+                    Section(header: Text("Date & Time")) {
+                        dateSection
+                    }
+
                 }
-                .padding(.top, -20)
                 
                 if showSuccessMessage {
                     VStack {
@@ -221,33 +234,131 @@ struct AddExpenseView: View {
             .onTapGesture {
                 isAmountFieldFocused = true
             }
-            
-            NavigationLink(destination: PaymentPickerView(paymentMethod: $selectedPayment)) {
+
+            Button {
+                showingPaymentMethodSheet = true
+            } label: {
                 HStack {
                     selectedPayment.icon
                         .frame(width: 20)
                         .foregroundColor(selectedPayment.color)
                     Text("Payment Method")
+                        .tint(.primary)
                     Spacer()
                     Text(selectedPayment.rawValue)
                         .foregroundColor(.secondary)
+                    Image(systemName: "chevron.right")
+                        .foregroundColor(.secondary)
                 }
+                .contentShape(Rectangle())
             }
+            .sheet(isPresented: $showingPaymentMethodSheet) {
+                paymentMethodSheet
+                    .presentationDetents([.large])
+                    .presentationDragIndicator(.visible)
+            }
+            .presentationDragIndicator(.visible)
         }
     }
-    
+    @State private var showingDebugAlert = false
     private var detailsSection: some View {
         Section {
             TextField("Title (Optional)", text: $title)
-            NavigationLink(destination: CategoryPickerView(selectedCategory: $selectedCategory)) {
+            Button {
+                showingCategorySheet = true
+            } label: {
                 HStack {
                     selectedCategory.icon
                         .frame(width: 20)
                         .foregroundColor(selectedCategory.color)
                     Text("Category")
+                        .tint(.primary)
                     Spacer()
                     Text(selectedCategory.rawValue)
                         .foregroundColor(.secondary)
+                    Image(systemName: "chevron.right")
+                        .foregroundColor(.secondary)
+                }
+                .contentShape(Rectangle())
+            }
+            .sheet(isPresented: $showingCategorySheet) {
+                categorySheet
+                    .presentationDetents([.large])
+                    .presentationDragIndicator(.visible)
+            }
+            .presentationDragIndicator(.visible)
+        }
+    }
+    
+    private var paymentMethodSheet: some View{
+        NavigationStack {
+            List {
+                ForEach(PaymentMethod.allCases, id: \.self) { method in
+                    HStack {
+                        method.icon
+                            .frame(width: 20)
+                            .foregroundColor(method.color)
+                        Text(method.rawValue)
+                        Spacer()
+                        if method == selectedPayment {
+                            Image(systemName: "checkmark")
+                                .foregroundColor(.accentColor)
+                        }
+                    }
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        selectedPayment = method
+                        showingPaymentMethodSheet = false
+                    }
+                }
+            }
+            .padding(.top, -20)
+            .navigationTitle("Select Payment Method")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button(action: {
+                        showingPaymentMethodSheet = false
+                    }) {
+                        Image(systemName: "xmark")
+                    }
+                }
+            }
+        }
+    }
+    
+    private var categorySheet: some View{
+        NavigationStack {
+            List {
+                ForEach(ExpenseCategory.allCases, id: \.self) { category in
+                    HStack {
+                        category.icon
+                            .frame(width: 20)
+                            .foregroundColor(category.color)
+                        Text(category.rawValue)
+                        Spacer()
+                        if category == selectedCategory {
+                            Image(systemName: "checkmark")
+                                .foregroundColor(.accentColor)
+                        }
+                    }
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        selectedCategory = category
+                        showingCategorySheet = false
+                    }
+                }
+            }
+            .padding(.top, -20)
+            .navigationTitle("Select Category")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button(action: {
+                        showingCategorySheet = false
+                    }) {
+                        Image(systemName: "xmark")
+                    }
                 }
             }
         }
@@ -259,6 +370,39 @@ struct AddExpenseView: View {
                 .datePickerStyle(.graphical)
                 .padding(.top, -20)
                 .padding(.bottom, -40)
+        }
+    }
+    
+    private var locationSection: some View {
+        HStack {
+            if let loc = selectedLocation, let addr = selectedAddress, !loc.isEmpty, !addr.isEmpty {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(loc)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                    Text(addr)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                }
+            } else {
+                Text("Add Location")
+                    .foregroundColor(Color(uiColor: .placeholderText))
+            }
+            Spacer()
+        }
+        .background(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(Color(uiColor: .systemBackground))
+        )
+        .onTapGesture {
+            showingLocationSheet = true
+        }
+        .sheet(isPresented: $showingLocationSheet) {
+            LocationSearchView(selectedLocation: $selectedLocation, selectedAddress: $selectedAddress)
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
         }
     }
     
@@ -433,3 +577,4 @@ struct AddExpenseView: View {
         return filtered
     }
 }
+

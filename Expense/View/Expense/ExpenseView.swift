@@ -157,6 +157,7 @@ struct ExpenseView: View {
                                 color: .blue,
                                 onRemove: {
                                     withAnimation(.easeInOut(duration: 0.2)) {
+                                        filter.lastDateRange = filter.dateRange
                                         filter.dateRange = nil
                                     }
                                 }

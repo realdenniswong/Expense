@@ -7,6 +7,7 @@
 
 import SwiftUI
 import SwiftData
+import Foundation
 
 // Money value type
 struct Money: Codable, Equatable {
@@ -69,13 +70,20 @@ class Transaction {
     var category: ExpenseCategory
     var date: Date
     var paymentMethod: PaymentMethod
+    var location: String?
+    var address: String?
     
-    init(id: UUID = UUID(), title: String, amount: Money, category: ExpenseCategory, date: Date, paymentMethod: PaymentMethod) {
+    var weeklyGoalCategoriesRaw: [String] = []
+    
+    init(id: UUID = UUID(), title: String, amount: Money, category: ExpenseCategory, date: Date, paymentMethod: PaymentMethod, location: String? = nil, address: String? = nil) {
         self.id = id
         self.title = title
         self.amount = amount
         self.category = category
         self.date = date
         self.paymentMethod = paymentMethod
+        self.location = location
+        self.address = address
     }
 }
+

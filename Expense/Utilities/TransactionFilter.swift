@@ -13,6 +13,7 @@ struct TransactionFilter {
     var categories: Set<ExpenseCategory> = []
     var paymentMethods: Set<PaymentMethod> = []
     var dateRange: ClosedRange<Date>?
+    var lastDateRange: ClosedRange<Date>? = nil
     
     var isActive: Bool {
         !searchText.isEmpty || !categories.isEmpty || !paymentMethods.isEmpty || dateRange != nil
@@ -61,6 +62,7 @@ struct TransactionFilter {
         searchText = ""
         categories.removeAll()
         paymentMethods.removeAll()
+        lastDateRange = dateRange
         dateRange = nil
     }
     
@@ -69,7 +71,8 @@ struct TransactionFilter {
         guard let range = dateRange else { return "" }
         let formatter = DateFormatter()
         formatter.dateStyle = .short
-        return "\(range.lowerBound.shortDateString) - \(range.upperBound.shortDateString)"
+        formatter.timeStyle = .short
+        return "\(formatter.string(from: range.lowerBound)) - \(formatter.string(from: range.upperBound))"
     }
 }
 
@@ -77,47 +80,46 @@ struct TransactionFilter {
 struct FilterSheet: View {
     @Binding var filter: TransactionFilter
     @Environment(\.dismiss) private var dismiss
-    @State private var tempStartDate = Date()
-    @State private var tempEndDate = Date()
-    @State private var showDatePicker = false
     
     var body: some View {
         NavigationStack {
             List {
                 // Date Filter Section
                 Section {
-                    HStack {
-                        Image(systemName: "calendar")
-                            .foregroundColor(.blue)
-                            .frame(width: 20)
-                        
-                        if filter.dateRange != nil {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("Date Range")
-                                    .font(.body)
-                                Text(filter.dateRangeDisplayText)
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                        } else {
-                            Text("Date Range")
-                                .font(.body)
-                        }
-                        
-                        Spacer()
-                        
-                        if filter.dateRange != nil {
-                            Button("Clear") {
+                    Toggle("Filter by Date", isOn: Binding(
+                        get: { filter.dateRange != nil },
+                        set: { isOn in
+                            if isOn {
+                                filter.dateRange = filter.lastDateRange ?? {
+                                    let end = Date()
+                                    let start = Calendar.current.date(byAdding: .month, value: -1, to: end)!
+                                    return start...end
+                                }()
+                            } else {
+                                filter.lastDateRange = filter.dateRange
                                 filter.dateRange = nil
                             }
-                            .font(.caption)
-                            .foregroundColor(.red)
                         }
-                    }
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        setupDatePicker()
-                        showDatePicker = true
+                    ))
+
+                    if filter.dateRange != nil {
+                        DatePicker("From", selection: Binding(
+                            get: { filter.dateRange?.lowerBound ?? Date() },
+                            set: { newValue in
+                                let end = filter.dateRange?.upperBound ?? newValue
+                                filter.dateRange = min(newValue, end)...max(newValue, end)
+                            }
+                        ), displayedComponents: [.date, .hourAndMinute])
+                        .datePickerStyle(.compact)
+
+                        DatePicker("To", selection: Binding(
+                            get: { filter.dateRange?.upperBound ?? Date() },
+                            set: { newValue in
+                                let start = filter.dateRange?.lowerBound ?? newValue
+                                filter.dateRange = min(start, newValue)...max(start, newValue)
+                            }
+                        ), displayedComponents: [.date, .hourAndMinute])
+                        .datePickerStyle(.compact)
                     }
                 } header: {
                     Text("Date")
@@ -196,67 +198,7 @@ struct FilterSheet: View {
                 }
             }
         }
-        .sheet(isPresented: $showDatePicker) {
-            DateRangePickerSheet(
-                startDate: $tempStartDate,
-                endDate: $tempEndDate,
-                onSave: { start, end in
-                    filter.dateRange = start...end
-                }
-            )
-        }
-        .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
-    }
-    
-    private func setupDatePicker() {
-        if let range = filter.dateRange {
-            tempStartDate = range.lowerBound
-            tempEndDate = range.upperBound
-        } else {
-            tempEndDate = Date()
-            tempStartDate = Calendar.current.date(byAdding: .month, value: -1, to: tempEndDate) ?? tempEndDate
-        }
-    }
-}
-
-// MARK: - Simplified Date Range Picker
-struct DateRangePickerSheet: View {
-    @Binding var startDate: Date
-    @Binding var endDate: Date
-    let onSave: (Date, Date) -> Void
-    @Environment(\.dismiss) private var dismiss
-    
-    var body: some View {
-        NavigationStack {
-            VStack(spacing: 20) {
-                DatePicker("From", selection: $startDate, displayedComponents: [.date])
-                    .datePickerStyle(.graphical)
-                
-                DatePicker("To", selection: $endDate, in: startDate..., displayedComponents: [.date])
-                    .datePickerStyle(.graphical)
-                
-                Spacer()
-            }
-            .padding()
-            .navigationTitle("Select Date Range")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                }
-                
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
-                        onSave(startDate, endDate)
-                        dismiss()
-                    }
-                }
-            }
-        }
-        .presentationDetents([.large])
     }
 }
 
@@ -271,7 +213,8 @@ struct CategoryFilterRow: View {
             onToggle(!isSelected)
         }) {
             HStack {
-                CategoryIcon(category: category, size: 32, iconSize: 14)
+                CategoryIcon(category: category, size: 20, iconSize: 12)
+                    .frame(width: 20, height: 20)
                 
                 Text(category.rawValue)
                     .font(.body)
