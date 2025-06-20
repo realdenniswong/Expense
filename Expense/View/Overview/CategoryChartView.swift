@@ -23,7 +23,7 @@ struct CategoryChartView: View {
                 .foregroundStyle(element.category.color)
                 .opacity(0.8)
             }
-            .pieChartStyle()
+            .chartStyle(.pie)
             .padding(.horizontal, 10)
             .animation(.easeInOut(duration: 0.3), value: period)
         }

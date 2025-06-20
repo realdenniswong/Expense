@@ -55,31 +55,27 @@ enum TimePeriod: String, CaseIterable {
         return "\(rawValue) Goals"
     }
     
-    var iconName: String {
+    private var config: (icon: String, color: Color, desc: String) {
         switch self {
-        case .daily: return "target"
-        case .weekly: return "calendar.badge.clock"
-        case .monthly: return "calendar"
+        case .daily:
+            return ("target", .blue, "Enable daily spending goals to track frequent expenses like food and transportation.")
+        case .weekly:
+            return ("calendar.badge.clock", .orange, "Enable weekly spending goals to track moderate frequency expenses like shopping and entertainment.")
+        case .monthly:
+            return ("calendar", .green, "Enable monthly spending goals to track all expense categories, including bills and healthcare.")
         }
+    }
+    
+    var iconName: String {
+        return config.icon
     }
     
     var iconColor: Color {
-        switch self {
-        case .daily: return .blue
-        case .weekly: return .orange
-        case .monthly: return .green
-        }
+        return config.color
     }
     
     var description: String {
-        switch self {
-        case .daily:
-            return "Enable daily spending goals to track frequent expenses like food and transportation."
-        case .weekly:
-            return "Enable weekly spending goals to track moderate frequency expenses like shopping and entertainment."
-        case .monthly:
-            return "Enable monthly spending goals to track all expense categories, including bills and healthcare."
-        }
+        return config.desc
     }
     
     var categoriesFooter: String {

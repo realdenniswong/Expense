@@ -157,7 +157,7 @@ struct SpendingTrendsView: View {
                 )
                 .cornerRadius(6)
             }
-            .barChartStyle()
+            .chartStyle(.bar)
             .chartXSelection(value: $selectedLabel)
             .animation(.easeInOut(duration: 0.3), value: selectedPeriod)
             .animation(.easeInOut(duration: 0.3), value: selectedDate)

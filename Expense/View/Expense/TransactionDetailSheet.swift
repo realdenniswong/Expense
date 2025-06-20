@@ -56,7 +56,7 @@ struct TransactionDetailSheet: View {
                     HStack {
                         Text("Date")
                         Spacer()
-                        Text(transaction.date.dateString + " " + transaction.date.timeString)
+                        Text(transaction.date.mediumDateString + " " + transaction.date.timeString)
                             .foregroundColor(.secondary)
                     }
                 }

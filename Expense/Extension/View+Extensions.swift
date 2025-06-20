@@ -8,6 +8,11 @@
 import SwiftUI
 import Charts
 
+enum ChartType {
+    case bar
+    case pie
+}
+
 // MARK: - Alert Helper
 struct AlertState {
     var isShowing = false
@@ -60,15 +65,12 @@ extension View {
             }
     }
     
-    func pieChartStyle() -> some View {
-        self
-            .chartBackground { _ in Color.clear }
-            .frame(height: 320)
-    }
-    
-    func barChartStyle() -> some View {
-        self
-            .frame(height: 200)
-            .standardChartStyle()
+    func chartStyle(_ type: ChartType) -> some View {
+        switch type {
+        case .bar:
+            return AnyView(self.frame(height: 200).standardChartStyle())
+        case .pie:
+            return AnyView(self.chartBackground { _ in Color.clear }.frame(height: 320))
+        }
     }
 }
