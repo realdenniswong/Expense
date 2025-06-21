@@ -12,6 +12,9 @@ struct ExpenseApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .onAppear {
+                    SimpleLocationManager.prewarmLocation()
+                }
         }
         .modelContainer(for: [Transaction.self, Settings.self])
     }

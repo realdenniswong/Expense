@@ -669,7 +669,7 @@ class SimpleLocationManager: NSObject, ObservableObject, CLLocationManagerDelega
     override init() {
         super.init()
         manager.delegate = self
-        manager.desiredAccuracy = kCLLocationAccuracyBest
+        manager.desiredAccuracy = kCLLocationAccuracyHundredMeters
     }
     
     func requestLocationPermission() {
@@ -723,5 +723,14 @@ class SimpleLocationManager: NSObject, ObservableObject, CLLocationManagerDelega
         if status == .authorizedWhenInUse || status == .authorizedAlways {
             manager.requestLocation()
         }
+    }
+}
+
+// MARK: - SimpleLocationManager Early Prewarm Extension
+
+extension SimpleLocationManager {
+    static let shared = SimpleLocationManager() // singleton for early access
+    static func prewarmLocation() {
+        shared.requestLocationPermission()
     }
 }
