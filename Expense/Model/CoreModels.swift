@@ -72,10 +72,12 @@ class Transaction {
     var paymentMethod: PaymentMethod
     var location: String?
     var address: String?
+    var latitude: Double?
+    var longitude: Double?
     
     var weeklyGoalCategoriesRaw: [String] = []
     
-    init(id: UUID = UUID(), title: String, amount: Money, category: ExpenseCategory, date: Date, paymentMethod: PaymentMethod, location: String? = nil, address: String? = nil) {
+    init(id: UUID = UUID(), title: String, amount: Money, category: ExpenseCategory, date: Date, paymentMethod: PaymentMethod, location: String? = nil, address: String? = nil, latitude: Double? = nil, longitude: Double? = nil) {
         self.id = id
         self.title = title
         self.amount = amount
@@ -84,6 +86,8 @@ class Transaction {
         self.paymentMethod = paymentMethod
         self.location = location
         self.address = address
+        self.latitude = latitude
+        self.longitude = longitude
     }
 }
 

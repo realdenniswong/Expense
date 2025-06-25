@@ -3,10 +3,21 @@ import MapKit
 import CoreLocation
 import Contacts
 
+// Codable struct for recent locations
+struct RecentLocation: Codable, Hashable, Identifiable {
+    var id: UUID
+    var name: String
+    var address: String
+    var latitude: Double?
+    var longitude: Double?
+}
+
 // Enhanced LocationSearchView with MKLocalSearchCompleter
 struct LocationSearchView: View {
     @Binding var selectedLocation: String?
     @Binding var selectedAddress: String?
+    @Binding var selectedLatitude: Double?
+    @Binding var selectedLongitude: Double?
     @Environment(\.dismiss) private var dismiss
     
     @State private var searchText = ""
@@ -23,12 +34,16 @@ struct LocationSearchView: View {
     // Search completer for smart suggestions
     @StateObject private var searchCompleter = SearchCompleter()
     
+    @AppStorage("recentLocations") private var recentLocationsData: Data = Data()
+    @State private var recentLocations: [RecentLocation] = []
+    
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
                 List {
+                    
                     // Current Location Section
-                    Section {
+                    Section(header: Text("Location Search")) {
                         HStack {
                             Image(systemName: "magnifyingglass")
                                 .foregroundColor(.secondary)
@@ -109,14 +124,62 @@ struct LocationSearchView: View {
                             }
                         }
                     }
+                    
+                    // Recent Locations Section
+                    if !recentLocations.isEmpty {
+                        Section(header:
+                            HStack {
+                                Text("Recent Locations")
+                                Spacer()
+                                if !recentLocations.isEmpty {
+                                    Button("Clear All") {
+                                        recentLocations.removeAll()
+                                        saveRecentLocations()
+                                    }
+                                    .font(.caption)
+                                    .foregroundColor(.blue)
+                                }
+                            }
+                        ) {
+                            ForEach(recentLocations) { recent in
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(recent.name)
+                                        .font(.body)
+                                        .lineLimit(1)
+                                    Text(recent.address)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                        .lineLimit(2)
+                                }
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    selectRecentLocation(recent)
+                                }
+                            }
+                            .onDelete(perform: deleteRecentLocations)
+                        }
+                    }
+                    
                 }
             }
             .navigationTitle("Location")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                // Allows custom text as location if not an exact result, like Calendar app
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Done") {
-                        dismiss()
+                        // Always save plain text unless user taps a suggestion/result.
+                        let trimmed = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+                        if !trimmed.isEmpty {
+                            selectedLocation = trimmed
+                            selectedAddress = trimmed
+                            selectedLatitude = nil
+                            selectedLongitude = nil
+                            addRecentLocation(name: trimmed, address: trimmed, latitude: nil, longitude: nil)
+                            dismiss()
+                        } else {
+                            dismiss()
+                        }
                     }
                 }
             }
@@ -130,28 +193,117 @@ struct LocationSearchView: View {
                     searchWithDelay()
                 }
             }
-        }
-        .onAppear {
-            // Start getting location immediately
-            locationManager.requestLocationPermission()
-            
-            // Set initial region for search completer
-            setupSearchCompleterRegion()
-            
-            // Auto-focus search field like Calendar app
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
-                isSearchFocused = true
+            .onAppear {
+                loadRecentLocations()
+                // Start getting location immediately
+                locationManager.requestLocationPermission()
+                
+                // Set initial region for search completer
+                setupSearchCompleterRegion()
+                
+                // Auto-focus search field like Calendar app
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                    isSearchFocused = true
+                }
+            }
+            .onReceive(locationManager.$currentLocation) { location in
+                // Update search completer region when location changes
+                setupSearchCompleterRegion()
+                // Also update the completer's location for sorting
+                searchCompleter.setLocation(location)
+            }
+            .onReceive(searchCompleter.$completions) { completions in
+                searchCompletions = completions
             }
         }
-        .onReceive(locationManager.$currentLocation) { location in
-            // Update search completer region when location changes
-            setupSearchCompleterRegion()
-            // Also update the completer's location for sorting
-            searchCompleter.setLocation(location)
+    }
+    
+    // MARK: - Helper to check if searchText is already a result
+    
+    private func isSearchTextAlreadyAResult() -> Bool {
+        let trimmed = searchText.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        print("[DEBUG] Search text (trimmed, lowered): '\(trimmed)'")
+        if trimmed.isEmpty { 
+            print("[DEBUG] Search text is empty after trimming")
+            return true 
         }
-        .onReceive(searchCompleter.$completions) { completions in
-            searchCompletions = completions
+        if let matched = searchResults.first(where: { 
+            let nameLower = ($0.name ?? "").lowercased()
+            let match = nameLower == trimmed
+            if match { print("[DEBUG] Matched in searchResults: \($0.name ?? "")") }
+            return match
+        }) {
+            return true
         }
+        if let matched = searchCompletions.first(where: {
+            let titleLower = $0.title.lowercased()
+            let match = titleLower == trimmed
+            if match { print("[DEBUG] Matched in searchCompletions: \($0.title)") }
+            return match
+        }) {
+            return true
+        }
+        if let matched = recentLocations.first(where: {
+            let nameLower = $0.name.lowercased()
+            let addressLower = $0.address.lowercased()
+            let match = nameLower == trimmed && addressLower == trimmed
+            if match { print("[DEBUG] Matched in recentLocations: \($0.name) / \($0.address)") }
+            return match
+        }) {
+            return true
+        }
+        print("[DEBUG] No match for '\(trimmed)'")
+        return false
+    }
+    
+    // MARK: - Recent Locations Storage
+    
+    private func loadRecentLocations() {
+        do {
+            let decoded = try JSONDecoder().decode([RecentLocation].self, from: recentLocationsData)
+            recentLocations = decoded
+        } catch {
+            recentLocations = []
+        }
+    }
+    
+    private func saveRecentLocations() {
+        do {
+            let encoded = try JSONEncoder().encode(recentLocations)
+            recentLocationsData = encoded
+        } catch {
+            print("Failed to save recent locations: \(error)")
+        }
+    }
+    
+    private func addRecentLocation(name: String, address: String, latitude: Double? = nil, longitude: Double? = nil) {
+        // If the location already exists, remove it to put it on top
+        if let index = recentLocations.firstIndex(where: { $0.name == name && $0.address == address }) {
+            recentLocations.remove(at: index)
+        }
+        // Prevent duplicate manual entries where name == address
+        if name == address {
+            if recentLocations.contains(where: { $0.name == name && $0.address == address }) {
+                // Already exists, don't insert again
+                saveRecentLocations()
+                return
+            }
+        }
+        // Insert new location at the front
+        let newRecent = RecentLocation(id: UUID(), name: name, address: address, latitude: latitude, longitude: longitude)
+        recentLocations.insert(newRecent, at: 0)
+        
+        // Limit max number of recent locations to 8
+        if recentLocations.count > 8 {
+            recentLocations = Array(recentLocations.prefix(8))
+        }
+        
+        saveRecentLocations()
+    }
+    
+    private func deleteRecentLocations(at offsets: IndexSet) {
+        recentLocations.remove(atOffsets: offsets)
+        saveRecentLocations()
     }
     
     // MARK: - Search Functions
@@ -285,11 +437,28 @@ struct LocationSearchView: View {
                     
                     selectedLocation = locationName
                     selectedAddress = address
+                    if let location = location {
+                        selectedLatitude = location.coordinate.latitude
+                        selectedLongitude = location.coordinate.longitude
+                    } else {
+                        selectedLatitude = nil
+                        selectedLongitude = nil
+                    }
+                    // Add current location to recent locations as well
+                    addRecentLocation(name: locationName, address: address, latitude: location?.coordinate.latitude, longitude: location?.coordinate.longitude)
                     dismiss()
                 } else if let location = location {
+                    let locString = String(format: "%.6f, %.6f", location.coordinate.latitude, location.coordinate.longitude)
                     selectedLocation = "Current Location"
-                    selectedAddress = String(format: "%.6f, %.6f", location.coordinate.latitude, location.coordinate.longitude)
+                    selectedAddress = locString
+                    selectedLatitude = location.coordinate.latitude
+                    selectedLongitude = location.coordinate.longitude
+                    // Add current location to recent locations as well
+                    addRecentLocation(name: "Current Location", address: locString, latitude: location.coordinate.latitude, longitude: location.coordinate.longitude)
                     dismiss()
+                } else {
+                    selectedLatitude = nil
+                    selectedLongitude = nil
                 }
             }
         }
@@ -297,10 +466,21 @@ struct LocationSearchView: View {
     
     private func selectLocation(_ mapItem: MKMapItem) {
         let name = mapItem.name ?? "Unknown Location"
-        let address = formatAddress(from: mapItem.placemark)
+        let address = mapItem.placemark.title ?? formatAddress(from: mapItem.placemark)
         
         selectedLocation = name
         selectedAddress = address
+        selectedLatitude = mapItem.placemark.coordinate.latitude
+        selectedLongitude = mapItem.placemark.coordinate.longitude
+        addRecentLocation(name: name, address: address, latitude: mapItem.placemark.coordinate.latitude, longitude: mapItem.placemark.coordinate.longitude)
+        dismiss()
+    }
+    
+    private func selectRecentLocation(_ recent: RecentLocation) {
+        selectedLocation = recent.name
+        selectedAddress = recent.address
+        selectedLatitude = recent.latitude
+        selectedLongitude = recent.longitude
         dismiss()
     }
     

@@ -18,6 +18,10 @@ struct TransactionService {
         category: ExpenseCategory,
         date: Date,
         paymentMethod: PaymentMethod,
+        location: String?,
+        address: String?,
+        latitude: Double? = nil,
+        longitude: Double? = nil,
         in context: ModelContext
     ) throws {
         transaction.title = title
@@ -25,6 +29,10 @@ struct TransactionService {
         transaction.category = category
         transaction.date = date
         transaction.paymentMethod = paymentMethod
+        transaction.location = location
+        transaction.address = address
+        transaction.latitude = latitude
+        transaction.longitude = longitude
         
         try context.save()
     }
@@ -36,6 +44,10 @@ struct TransactionService {
         category: ExpenseCategory,
         date: Date,
         paymentMethod: PaymentMethod,
+        location: String?,
+        address: String?,
+        latitude: Double? = nil,
+        longitude: Double? = nil,
         in context: ModelContext
     ) throws -> Transaction {
         let newTransaction = Transaction(
@@ -43,7 +55,11 @@ struct TransactionService {
             amount: amount,
             category: category,
             date: date,
-            paymentMethod: paymentMethod
+            paymentMethod: paymentMethod,
+            location: location,
+            address: address,
+            latitude: latitude,
+            longitude: longitude
         )
         
         context.insert(newTransaction)
@@ -52,3 +68,4 @@ struct TransactionService {
         return newTransaction
     }
 }
+

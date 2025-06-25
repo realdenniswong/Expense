@@ -23,10 +23,6 @@ struct TransactionList: View {
                             transaction: transaction,
                             selectedTransaction: $selectedTransaction,
                             onRowTapped: {
-                                // Force refresh the list to close swipe actions
-                                withAnimation(.easeOut(duration: 0.2)) {
-                                    listId = UUID()
-                                }
                                 // Small delay to ensure swipe actions close before showing sheet
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
                                     selectedTransaction = transaction
@@ -52,6 +48,7 @@ struct TransactionList: View {
     
     private func deleteSwipeButton(for transaction: Transaction) -> some View {
         Button(role: .destructive) {
+            listId = UUID()
             deleteTransaction(transaction)
         } label: {
             Label("Delete", systemImage: "trash")
@@ -60,6 +57,7 @@ struct TransactionList: View {
     
     private func editSwipeButton(for transaction: Transaction) -> some View {
         Button {
+            listId = UUID()
             editingTransaction = transaction
         } label: {
             Label("Edit", systemImage: "pencil")
