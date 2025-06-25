@@ -141,15 +141,18 @@ struct LocationSearchView: View {
                                 }
                             }
                         ) {
-                            ForEach(recentLocations) { recent in
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(recent.name)
-                                        .font(.body)
-                                        .lineLimit(1)
-                                    Text(recent.address)
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                        .lineLimit(2)
+                            ForEach(recentLocations.prefix(5)) { recent in
+                                HStack {
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(recent.name)
+                                            .font(.body)
+                                            .lineLimit(1)
+                                        Text(recent.address)
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                            .lineLimit(2)
+                                    }
+                                    Spacer()
                                 }
                                 .contentShape(Rectangle())
                                 .onTapGesture {
@@ -293,9 +296,9 @@ struct LocationSearchView: View {
         let newRecent = RecentLocation(id: UUID(), name: name, address: address, latitude: latitude, longitude: longitude)
         recentLocations.insert(newRecent, at: 0)
         
-        // Limit max number of recent locations to 8
-        if recentLocations.count > 8 {
-            recentLocations = Array(recentLocations.prefix(8))
+        // Limit max number of recent locations to 5
+        if recentLocations.count > 5 {
+            recentLocations = Array(recentLocations.prefix(5))
         }
         
         saveRecentLocations()
@@ -914,3 +917,4 @@ extension SimpleLocationManager {
         shared.requestLocationPermission()
     }
 }
+
