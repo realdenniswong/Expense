@@ -9,8 +9,14 @@ import Foundation
 import SwiftUI
 
 // Category spending analysis
-struct CategorySpending {
+struct CategorySpending: Equatable {
     let category: ExpenseCategory
+    let amountInCent: Int
+    let percentage: Int
+}
+
+struct PaymentMethodSpending: Equatable {
+    let paymentMethod: PaymentMethod
     let amountInCent: Int
     let percentage: Int
 }
@@ -44,7 +50,7 @@ struct SpendingGoal {
 }
 
 // SIMPLIFIED: Time period enumeration with built-in configuration
-enum TimePeriod: String, CaseIterable {
+enum TimePeriod: String, CaseIterable, Equatable {
     case daily = "Daily"
     case weekly = "Weekly"
     case monthly = "Monthly"

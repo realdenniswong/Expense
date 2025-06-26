@@ -10,6 +10,8 @@ struct SpendingGoalView: View {
     let transactionAnalyzer: TransactionAnalyzer
     let settings: Settings
     
+    @State private var showAllGoals = false
+    
     private var categories: [ExpenseCategory] {
         settings.enabledCategories(for: transactionAnalyzer.period)
     }
@@ -61,6 +63,18 @@ struct SpendingGoalView: View {
     private var progress: Double {
         guard totalBudget.cents > 0 else { return 0 }
         return min(Double(totalSpent.cents) / Double(totalBudget.cents), 1.0)
+    }
+    
+    private var limitedGoals: [SpendingGoal] {
+        if !showAllGoals && goals.count > 3 {
+            return Array(goals.prefix(3))
+        } else {
+            return goals
+        }
+    }
+    
+    private var shouldShowShowAllButton: Bool {
+        goals.count > 3
     }
     
     var body: some View {
@@ -116,9 +130,22 @@ struct SpendingGoalView: View {
             if !goals.isEmpty {
                 Divider()
                 
-                LazyVStack(spacing: 12) {
-                    ForEach(goals, id: \.category.rawValue) { goal in
-                        SpendingGoalRow(goal: goal)
+                ScrollView(showsIndicators: false) {
+                    LazyVStack(spacing: 12) {
+                        ForEach(limitedGoals, id: \.category.rawValue) { goal in
+                            SpendingGoalRow(goal: goal)
+                        }
+                        if shouldShowShowAllButton {
+                            Button(action: { showAllGoals.toggle() }) {
+                                Text(showAllGoals ? "Show Less" : "Show All")
+                                    .font(.callout)
+                                    .foregroundStyle(Color.accentColor)
+                                    .frame(maxWidth: .infinity, alignment: .center)
+                            }
+                            .buttonStyle(.plain)
+                            .padding(.top, 16)
+                            .transaction { $0.disablesAnimations = true }
+                        }
                     }
                 }
             }
@@ -129,7 +156,6 @@ struct SpendingGoalView: View {
                 .fill(Color(.systemBackground))
                 .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 2)
         )
-        .animation(.easeInOut(duration: 0.3), value: transactionAnalyzer.period)
     }
 }
 
@@ -176,3 +202,4 @@ struct SpendingGoalRow: View {
         .padding(.vertical, 4)
     }
 }
+

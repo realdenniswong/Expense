@@ -29,3 +29,26 @@ struct CategoryChartView: View {
         }
     }
 }
+
+struct PaymentMethodChartView: View {
+    let paymentMethodSpendingTotals: [PaymentMethodSpending]
+    let period: TimePeriod
+    
+    var body: some View {
+        if paymentMethodSpendingTotals.isEmpty {
+            EmptyChartView(period: period)
+                .padding(.horizontal, 20)
+        } else {
+            Chart(paymentMethodSpendingTotals, id: \.paymentMethod.rawValue) { element in
+                SectorMark(
+                    angle: .value("Amount", element.amountInCent)
+                )
+                .foregroundStyle(element.paymentMethod.color)
+                .opacity(0.8)
+            }
+            .chartStyle(.pie)
+            .padding(.horizontal, 10)
+            .animation(.easeInOut(duration: 0.3), value: period)
+        }
+    }
+}

@@ -84,6 +84,30 @@ struct TransactionAnalyzer {
         .sorted { $0.amountInCent > $1.amountInCent }
     }
     
+    // Category spending for filtered period - shows ALL categories
+    var paymentMethodSpendingTotals: [PaymentMethodSpending] {
+        let paymenyMethodTotals = Dictionary(grouping: filteredTransactions, by: { $0.paymentMethod })
+            .mapValues { transactions in
+                transactions.reduce(Money.zero) { $0 + $1.amount }.cents
+            }
+        
+        let filteredCategoryTotals = paymenyMethodTotals.filter { _, amount in
+            amount > 0
+        }
+        
+        let totalAmount = filteredCategoryTotals.values.reduce(0, +)
+        
+        return filteredCategoryTotals.map { paymenyMethodTotal in
+            PaymentMethodSpending(
+                paymentMethod: paymenyMethodTotal.key,
+                amountInCent: paymenyMethodTotal.value,
+                percentage: totalAmount > 0 ?
+                    Int(round((Double(paymenyMethodTotal.value) / Double(totalAmount)) * 100)) : 0
+            )
+        }
+        .sorted { $0.amountInCent > $1.amountInCent }
+    }
+    
     // Total spending for goals (only enabled categories)
     var totalGoalsSpending: Money {
         if let settings = settings {
