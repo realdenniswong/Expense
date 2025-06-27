@@ -58,7 +58,7 @@ struct OverviewView: View {
             
             ScrollView {
                 VStack(spacing: 24) {
-                    SpendingSummaryView(transactionAnalyzer: transactionAnalyzer, selectedPeriod: selectedPeriod)
+                    SpendingSummaryView(transactionAnalyzer: transactionAnalyzer, selectedPeriod: selectedPeriod, settings: settings)
                     
                     if settings.shouldShowGoals(for: selectedPeriod) {
                         SpendingGoalView(transactionAnalyzer: transactionAnalyzer, settings: settings)

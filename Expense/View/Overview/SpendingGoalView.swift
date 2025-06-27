@@ -35,11 +35,19 @@ struct SpendingGoalView: View {
             }
     }
     
+    /// Uses custom period boundaries (dailyStartHour, weeklyStartDay, monthlyStartDay)
+    private var customSpending: [ExpenseCategory: Money] {
+        Dictionary(grouping: transactionAnalyzer.customFilteredTransactions, by: { $0.category })
+            .mapValues { transactions in
+                transactions.reduce(Money.zero) { $0 + $1.amount }
+            }
+    }
+    
     private var goals: [SpendingGoal] {
         categories.compactMap { category in
             let goalAmount = settings.goalAmount(for: category)
             let adjustedLimit = Int(Double(goalAmount) * multiplier)
-            let currentSpending = spending[category]?.cents ?? 0
+            let currentSpending = customSpending[category]?.cents ?? 0
             
             return SpendingGoal(
                 category: category,
@@ -56,7 +64,7 @@ struct SpendingGoalView: View {
     
     private var totalSpent: Money {
         categories.reduce(.zero) { total, category in
-            total + (spending[category] ?? .zero)
+            total + (customSpending[category] ?? .zero)
         }
     }
     

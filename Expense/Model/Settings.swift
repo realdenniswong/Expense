@@ -11,6 +11,9 @@ import SwiftData
 @Model
 class Settings {
     var id: UUID
+    var weeklyStartDay: Int
+    var monthlyStartDay: Int
+    var dailyStartHour: Int
     
     // Spending Goal toggles for each period
     var showDailyGoals: Bool
@@ -27,6 +30,9 @@ class Settings {
     
     init(
         id: UUID = UUID(),
+        weeklyStartDay: Int = 1,
+        monthlyStartDay: Int = 1,
+        dailyStartHour: Int = 0,
         showDailyGoals: Bool = true,
         showWeeklyGoals: Bool = true,
         showMonthlyGoals: Bool = true,
@@ -35,6 +41,9 @@ class Settings {
         monthlyGoalCategories: Array<ExpenseCategory> = ExpenseCategory.allCases
     ) {
         self.id = id
+        self.weeklyStartDay = weeklyStartDay
+        self.monthlyStartDay = monthlyStartDay
+        self.dailyStartHour = dailyStartHour
         self.showDailyGoals = showDailyGoals
         self.showWeeklyGoals = showWeeklyGoals
         self.showMonthlyGoals = showMonthlyGoals

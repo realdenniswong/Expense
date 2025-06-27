@@ -20,7 +20,7 @@ struct SpendingTrendsView: View {
     private var trendData: [TrendData] {
         switch selectedPeriod {
         case .daily: return getTrendData(for: .day, periods: 7)
-        case .weekly: return getTrendData(for: .weekOfYear, periods: 5)
+        case .weekly: return getTrendData(for: .weekOfYear, periods: 6)
         case .monthly: return getTrendData(for: .month, periods: 6)
         }
     }
@@ -36,29 +36,114 @@ struct SpendingTrendsView: View {
             
             switch component {
             case .day:
-                periodDate = calendar.date(byAdding: .day, value: -(periods-1-i), to: selectedDate) ?? selectedDate
-                let start = calendar.startOfDay(for: periodDate)
-                let end = calendar.date(byAdding: .day, value: 1, to: start) ?? start
-                interval = DateInterval(start: start, end: end)
+                // Use settings.dailyStartHour if available
+                if let settings = settings {
+                    // For each day, compute start date with day offset and hour offset
+                    // Calculate the day offset from selectedDate, stepping back
+                    let dayOffset = -(periods - 1 - i)
+                    // Get the start of selectedDate day at dailyStartHour
+                    let baseDate = calendar.startOfDay(for: selectedDate)
+                    let baseWithStartHour = calendar.date(byAdding: .hour, value: settings.dailyStartHour, to: baseDate) ?? baseDate
+                    // Shift by dayOffset days
+                    periodDate = calendar.date(byAdding: .day, value: dayOffset, to: baseWithStartHour) ?? baseWithStartHour
+                    
+                    // The interval runs from periodDate to periodDate + 1 day
+                    let start = periodDate
+                    let end = calendar.date(byAdding: .day, value: 1, to: start) ?? start
+                    interval = DateInterval(start: start, end: end)
+                } else {
+                    periodDate = calendar.date(byAdding: .day, value: -(periods-1-i), to: selectedDate) ?? selectedDate
+                    let start = calendar.startOfDay(for: periodDate)
+                    let end = calendar.date(byAdding: .day, value: 1, to: start) ?? start
+                    interval = DateInterval(start: start, end: end)
+                }
             case .weekOfYear:
-                let selectedWeekInterval = calendar.dateInterval(of: .weekOfYear, for: selectedDate) ?? DateInterval(start: selectedDate, duration: 0)
-                let weekStart = calendar.date(byAdding: .weekOfYear, value: -(periods-1-i), to: selectedWeekInterval.start) ?? selectedDate
-                interval = calendar.dateInterval(of: .weekOfYear, for: weekStart) ?? DateInterval(start: weekStart, duration: 0)
+                if let settings = settings {
+                    // Use settings.weeklyStartDay (0=Sunday, 1=Monday, ... 6=Saturday)
+                    // We find the week start date for the selectedDate adjusted by weeklyStartDay,
+                    // then shift weeks backwards by periods-1-i
+                    
+                    // Find current week start aligned to weeklyStartDay
+                    let weekday = calendar.component(.weekday, from: selectedDate) - 1 // convert to 0-based Sunday=0
+                    let diffToStartDay = (weekday - settings.weeklyStartDay + 7) % 7
+                    let currentWeekStart = calendar.date(byAdding: .day, value: -diffToStartDay, to: calendar.startOfDay(for: selectedDate)) ?? selectedDate
+                    
+                    // Shift back by (periods-1-i) weeks
+                    let weekStart = calendar.date(byAdding: .weekOfYear, value: -(periods-1-i), to: currentWeekStart) ?? currentWeekStart
+                    
+                    // Week interval is from weekStart to weekStart + 7 days
+                    interval = DateInterval(start: weekStart, end: calendar.date(byAdding: .day, value: 7, to: weekStart) ?? weekStart)
+                    periodDate = weekStart
+                } else {
+                    let selectedWeekInterval = calendar.dateInterval(of: .weekOfYear, for: selectedDate) ?? DateInterval(start: selectedDate, duration: 0)
+                    let weekStart = calendar.date(byAdding: .weekOfYear, value: -(periods-1-i), to: selectedWeekInterval.start) ?? selectedDate
+                    interval = calendar.dateInterval(of: .weekOfYear, for: weekStart) ?? DateInterval(start: weekStart, duration: 0)
+                    periodDate = weekStart
+                }
             case .month:
-                let selectedMonthInterval = calendar.dateInterval(of: .month, for: selectedDate) ?? DateInterval(start: selectedDate, duration: 0)
-                let monthStart = calendar.date(byAdding: .month, value: -(periods-1-i), to: selectedMonthInterval.start) ?? selectedDate
-                interval = calendar.dateInterval(of: .month, for: monthStart) ?? DateInterval(start: monthStart, duration: 0)
+                if let settings = settings {
+                    // Use settings.monthlyStartDay (1...31) to define month start
+                    // Use monthlySummaryStart helper if available for correct alignment
+                    // For each month offset, compute the start date
+                    // monthlySummaryStart(date: Date, startDay: Int, calendar: Calendar) -> Date
+                    func monthlySummaryStart(_ date: Date, startDay: Int, calendar: Calendar) -> Date {
+                        // Find the start of the month containing date
+                        let components = calendar.dateComponents([.year, .month], from: date)
+                        let firstOfMonth = calendar.date(from: components) ?? date
+                        
+                        if startDay <= 1 {
+                            return firstOfMonth
+                        }
+                        
+                        var startComponents = DateComponents()
+                        startComponents.year = components.year
+                        startComponents.month = components.month
+                        startComponents.day = startDay
+                        
+                        if let startDayDate = calendar.date(from: startComponents) {
+                            if startDayDate <= date {
+                                return startDayDate
+                            } else {
+                                return calendar.date(byAdding: .month, value: -1, to: startDayDate) ?? startDayDate
+                            }
+                        }
+                        return firstOfMonth
+                    }
+                    
+                    // Calculate the adjusted monthStart using monthlySummaryStart, shifted by months
+                    let baseMonthStart = monthlySummaryStart(selectedDate, startDay: settings.monthlyStartDay, calendar: calendar)
+                    guard let monthStart = calendar.date(byAdding: .month, value: -(periods-1-i), to: baseMonthStart) else {
+                        periodDate = selectedDate
+                        interval = DateInterval(start: selectedDate, duration: 0)
+                        break
+                    }
+                    
+                    let nextMonthStart = calendar.date(byAdding: .month, value: 1, to: monthStart) ?? monthStart
+                    interval = DateInterval(start: monthStart, end: nextMonthStart)
+                    periodDate = monthStart
+                } else {
+                    let selectedMonthInterval = calendar.dateInterval(of: .month, for: selectedDate) ?? DateInterval(start: selectedDate, duration: 0)
+                    let monthStart = calendar.date(byAdding: .month, value: -(periods-1-i), to: selectedMonthInterval.start) ?? selectedDate
+                    interval = calendar.dateInterval(of: .month, for: monthStart) ?? DateInterval(start: monthStart, duration: 0)
+                    periodDate = monthStart
+                }
             default:
                 continue
             }
             
             let periodTransactions = transactions.filter { interval.contains($0.date) }
-            let enabledCategories = settings?.enabledCategories(for: selectedPeriod) ?? ExpenseCategory.allCases
-            let filteredTransactions = periodTransactions.filter { enabledCategories.contains($0.category) }
+            // Removed filtering by enabledCategories so we sum all categories regardless of settings
+            let filteredTransactions = periodTransactions
             let totalAmount = filteredTransactions.reduce(Money.zero) { $0 + $1.amount }
             
             let formatter = DateFormatter()
-            formatter.dateFormat = component == .month ? "MMM" : "MMM d"
+            if component == .month {
+                formatter.dateFormat = "MMM d"
+            } else if component == .day {
+                formatter.dateFormat = "d/M"
+            } else {
+                formatter.dateFormat = "MMM d"
+            }
             let label = formatter.string(from: interval.start)
             
             results.append(TrendData(
@@ -70,6 +155,16 @@ struct SpendingTrendsView: View {
         }
         
         return results
+    }
+    
+    // Uses customFilteredTransactions for user-defined boundaries
+    func getCustomTrendData(for category: ExpenseCategory, periods: [DateInterval]) -> [Money] {
+        let transactions = transactionAnalyzer.customFilteredTransactions
+        return periods.map { period in
+            transactions
+                .filter { $0.category == category && period.contains($0.date) }
+                .reduce(Money.zero) { $0 + $1.amount }
+        }
     }
     
     private var averageSpending: Money {
@@ -94,7 +189,7 @@ struct SpendingTrendsView: View {
     private var periodCount: String {
         switch selectedPeriod {
         case .daily: return "Last 7 days"
-        case .weekly: return "Last 5 weeks"
+        case .weekly: return "Last 6 weeks"
         case .monthly: return "Last 6 months"
         }
     }
@@ -180,9 +275,85 @@ struct SpendingTrendsView: View {
         )
         
         switch selectedPeriod {
-        case .daily: return tempAnalyzer.dailyDisplayName
-        case .weekly: return tempAnalyzer.weeklyDisplayName
-        case .monthly: return tempAnalyzer.monthlyDisplayName
+        case .daily:
+            if let settings = settings {
+                let calendar = Calendar.current
+                
+                // startDate is already aligned to dailyStartHour
+                let start = trend.startDate
+                
+                // end is start + 1 day - 1 minute
+                guard let endFull = calendar.date(byAdding: .day, value: 1, to: start) else {
+                    return tempAnalyzer.dailyDisplayName
+                }
+                // Subtract 1 minute
+                let end = calendar.date(byAdding: .minute, value: -1, to: endFull) ?? endFull
+                
+                let formatter = DateFormatter()
+                formatter.dateFormat = "d/M H:mm"
+                
+                return "\(formatter.string(from: start)) - \(formatter.string(from: end))"
+            } else {
+                return tempAnalyzer.dailyDisplayName
+            }
+        case .weekly:
+            // Show custom week range label based on settings.weeklyStartDay
+            let calendar = Calendar.current
+            guard let settings = settings else {
+                return tempAnalyzer.weeklyDisplayName
+            }
+            // weeklyStartDay: 0=Sunday ... 6=Saturday
+            
+            // Calculate custom week start aligned to weeklyStartDay
+            let weekday = calendar.component(.weekday, from: trend.startDate) - 1
+            let diffToStartDay = (weekday - settings.weeklyStartDay + 7) % 7
+            let weekStart = calendar.date(byAdding: .day, value: -diffToStartDay, to: calendar.startOfDay(for: trend.startDate)) ?? trend.startDate
+            let weekEnd = calendar.date(byAdding: .day, value: 6, to: weekStart) ?? weekStart
+            
+            let formatter = DateFormatter()
+            formatter.dateFormat = "d/M/yyyy"
+            
+            return "\(formatter.string(from: weekStart)) - \(formatter.string(from: weekEnd))"
+        case .monthly:
+            guard let settings = settings else {
+                return tempAnalyzer.monthlyDisplayName
+            }
+            let calendar = Calendar.current
+            
+            // Helper function for monthlySummaryStart
+            func monthlySummaryStart(_ date: Date, startDay: Int, calendar: Calendar) -> Date {
+                let components = calendar.dateComponents([.year, .month], from: date)
+                let firstOfMonth = calendar.date(from: components) ?? date
+                
+                if startDay <= 1 {
+                    return firstOfMonth
+                }
+                
+                var startComponents = DateComponents()
+                startComponents.year = components.year
+                startComponents.month = components.month
+                startComponents.day = startDay
+                
+                if let startDayDate = calendar.date(from: startComponents) {
+                    if startDayDate <= date {
+                        return startDayDate
+                    } else {
+                        return calendar.date(byAdding: .month, value: -1, to: startDayDate) ?? startDayDate
+                    }
+                }
+                return firstOfMonth
+            }
+            
+            let start = monthlySummaryStart(trend.startDate, startDay: settings.monthlyStartDay, calendar: calendar)
+            let nextMonth = calendar.date(byAdding: .month, value: 1, to: start) ?? start
+            // End is one day before nextMonth start
+            let end = calendar.date(byAdding: .day, value: -1, to: nextMonth) ?? nextMonth
+            
+            let formatter = DateFormatter()
+            formatter.dateFormat = "d/M/yyyy"
+            
+            return "\(formatter.string(from: start)) - \(formatter.string(from: end))"
         }
     }
 }
+

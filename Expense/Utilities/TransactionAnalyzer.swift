@@ -157,4 +157,67 @@ struct TransactionAnalyzer {
             return monthlyDisplayName
         }
     }
+    
+    // MARK: - Custom Period Amounts
+    
+    /// Calculates the total amount for a custom day starting at the specified hour.
+    func customDayAmount(startHour: Int) -> Money {
+        let calendar = Calendar.current
+        var components = calendar.dateComponents([.year, .month, .day], from: selectedDate)
+        components.hour = startHour
+        let startDate = calendar.date(from: components) ?? selectedDate
+        let endDate = calendar.date(byAdding: .day, value: 1, to: startDate) ?? startDate
+        return transactions.filter { $0.date >= startDate && $0.date < endDate }
+            .reduce(.zero) { $0 + $1.amount }
+    }
+    
+    /// Calculates the total amount for a custom week starting on the specified weekday.
+    func customWeekAmount(startDay: Int) -> Money {
+        let calendar = Calendar.current
+        let currentWeekday = calendar.component(.weekday, from: selectedDate)
+        let daysToSubtract = (currentWeekday - startDay + 7) % 7
+        let startDate = calendar.startOfDay(for: calendar.date(byAdding: .day, value: -daysToSubtract, to: selectedDate) ?? selectedDate)
+        let endDate = calendar.date(byAdding: .day, value: 7, to: startDate) ?? startDate
+        return transactions.filter { $0.date >= startDate && $0.date < endDate }
+            .reduce(.zero) { $0 + $1.amount }
+    }
+    
+    /// Calculates the total amount for a custom month with an optional offset and starting on the specified day.
+    func customMonthAmount(monthOffset: Int = 0, startDay: Int) -> Money {
+        let calendar = Calendar.current
+        guard let adjustedDate = calendar.date(byAdding: .month, value: monthOffset, to: selectedDate) else { return .zero }
+        let startOfMonth = calendar.monthlySummaryStart(for: adjustedDate, startDay: startDay)
+        let endOfMonth = calendar.date(byAdding: .month, value: 1, to: startOfMonth).flatMap { calendar.date(byAdding: .day, value: -1, to: $0) } ?? startOfMonth
+        return transactions.filter { $0.date >= startOfMonth && $0.date <= endOfMonth }
+            .reduce(.zero) { $0 + $1.amount }
+    }
+    
+    /// Returns transactions filtered by custom daily/weekly/monthly boundaries according to settings. Use this in places where correct user boundaries are required.
+    var customFilteredTransactions: [Transaction] {
+        let calendar = Calendar.current
+        guard let settings = settings else { return filteredTransactions }
+        switch period {
+        case .daily:
+            var components = calendar.dateComponents([.year, .month, .day], from: selectedDate)
+            components.hour = settings.dailyStartHour
+            let start = calendar.date(from: components) ?? selectedDate
+            let end = calendar.date(byAdding: .day, value: 1, to: start) ?? start
+            return transactions.filter { $0.date >= start && $0.date < end }
+        case .weekly:
+            let weekday = settings.weeklyStartDay
+            let currentWeekday = calendar.component(.weekday, from: selectedDate)
+            let daysToSubtract = (currentWeekday - weekday + 7) % 7
+            let start = calendar.startOfDay(for: calendar.date(byAdding: .day, value: -daysToSubtract, to: selectedDate) ?? selectedDate)
+            let end = calendar.date(byAdding: .day, value: 7, to: start) ?? start
+            return transactions.filter { $0.date >= start && $0.date < end }
+        case .monthly:
+            let startDay = settings.monthlyStartDay
+            let start = calendar.monthlySummaryStart(for: selectedDate, startDay: startDay)
+            let end = calendar.date(byAdding: .month, value: 1, to: start).flatMap { calendar.date(byAdding: .day, value: -1, to: $0) } ?? start
+            let exclusiveEnd = calendar.date(byAdding: .day, value: 1, to: end) ?? end
+            return transactions.filter { $0.date >= start && $0.date < exclusiveEnd }
+        }
+    }
+    
+    // Reminder: Use `customFilteredTransactions` for breakdowns, goals, trends, and analytics that should respect user boundaries.
 }

@@ -44,9 +44,12 @@ struct AddExpenseView: View {
     @State private var showSuccessMessage = false
     @State private var successMessageText = ""
     @FocusState private var isAmountFieldFocused: Bool
+    @FocusState private var isTitleFieldFocused: Bool
 
     @State private var accountantManager: AccountantModeManager?
     @State private var showCheckmark = false
+
+    @State private var showSuggestions = false
 
     init(accountantMode: Bool = false) {
         self.transactionToEdit = nil
@@ -69,6 +72,30 @@ struct AddExpenseView: View {
         selectedAddress != originalAddress ||
         selectedLatitude != originalLatitude ||
         selectedLongitude != originalLongitude
+    }
+    
+    private var previousDescriptions: [String] {
+        let trimmedTitles = allTransactions.map { $0.title.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+        let counts = Dictionary(trimmedTitles.map { ($0, 1) }, uniquingKeysWith: +)
+        return counts
+            .sorted { $0.value > $1.value }
+            .map { $0.key }
+    }
+    
+    private var filteredSuggestions: [String] {
+        guard !title.isEmpty else { return [] }
+        let trimmedTitles = allTransactions.map { $0.title.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+        let counts = Dictionary(trimmedTitles.map { ($0, 1) }, uniquingKeysWith: +)
+        let lowercasedInput = title.lowercased()
+        let startsWith = counts.filter { $0.key.lowercased().hasPrefix(lowercasedInput) && $0.key != title }
+            .sorted { $0.value > $1.value }
+            .map { $0.key }
+        let contains = counts.filter { $0.key.lowercased().contains(lowercasedInput) && !$0.key.lowercased().hasPrefix(lowercasedInput) && $0.key != title }
+            .sorted { $0.value > $1.value }
+            .map { $0.key }
+        return startsWith + contains
     }
 
     var body: some View {
@@ -145,118 +172,173 @@ struct AddExpenseView: View {
                     .background(Color(.systemGroupedBackground))
                 }
 
-                Form {
-                    Section(header: Text("Amount & Payment")) {
-                        HStack {
-                            Text("HK$")
-                                .font(.system(size: 22))
-                                .foregroundColor(.secondary)
-                            TextField("0.00", text: $amount)
-                                .keyboardType(.decimalPad)
-                                .font(.system(size: 30))
-                                .multilineTextAlignment(.trailing)
-                                .monospacedDigit()
-                                .focused($isAmountFieldFocused)
-                                .onChange(of: amount) { _, newValue in
-                                    amount = InputValidator.sanitizeAmountInput(newValue)
-                                }
-                        }
-                        .contentShape(Rectangle())
-                        .onTapGesture { isAmountFieldFocused = true }
-
-                        Button { showingPaymentMethodSheet = true } label: {
+                ZStack(alignment: .topLeading) {
+                    Form {
+                        Section(header: Text("Amount & Payment")) {
                             HStack {
-                                selectedPayment.icon
-                                    .frame(width: 20)
-                                    .foregroundColor(selectedPayment.color)
-                                Text("Payment Method")
-                                    .tint(.primary)
-                                Spacer()
-                                Text(selectedPayment.rawValue)
+                                Text("HK$")
+                                    .font(.system(size: 22))
                                     .foregroundColor(.secondary)
-                                Image(systemName: "chevron.right")
-                                    .foregroundColor(.secondary)
+                                TextField("0.00", text: $amount)
+                                    .keyboardType(.decimalPad)
+                                    .font(.system(size: 30))
+                                    .multilineTextAlignment(.trailing)
+                                    .monospacedDigit()
+                                    .focused($isAmountFieldFocused)
+                                    .onChange(of: amount) { _, newValue in
+                                        amount = InputValidator.sanitizeAmountInput(newValue)
+                                    }
                             }
-                        }
-                        .sheet(isPresented: $showingPaymentMethodSheet) {
-                            PaymentMethodSelectionSheet(
-                                selectedMethod: selectedPayment,
-                                onSelect: { method in
-                                    selectedPayment = method
-                                    showingPaymentMethodSheet = false
-                                }
-                            )
-                        }
-                    }
+                            .contentShape(Rectangle())
+                            .onTapGesture { isAmountFieldFocused = true }
 
-                    Section(header: Text("Details")) {
-                        TextField("Title (Optional)", text: $title)
-
-                        Button { showingCategorySheet = true } label: {
-                            HStack {
-                                selectedCategory.icon
-                                    .frame(width: 20)
-                                    .foregroundColor(selectedCategory.color)
-                                Text("Category")
-                                    .tint(.primary)
-                                Spacer()
-                                Text(selectedCategory.rawValue)
-                                    .foregroundColor(.secondary)
-                                Image(systemName: "chevron.right")
-                                    .foregroundColor(.secondary)
-                            }
-                        }
-                        .sheet(isPresented: $showingCategorySheet) {
-                            CategorySelectionSheet(
-                                selectedCategory: selectedCategory,
-                                onSelect: { category in
-                                    selectedCategory = category
-                                    showingCategorySheet = false
-                                }
-                            )
-                        }
-                    }
-
-                    Section(header: Text("Location")) {
-                        HStack {
-                            if let location = selectedLocation, let address = selectedAddress,
-                               !location.isEmpty, !address.isEmpty {
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(location)
-                                        .lineLimit(1)
-                                        .truncationMode(.tail)
-                                    Text(address)
-                                        .font(.caption)
+                            Button { showingPaymentMethodSheet = true } label: {
+                                HStack {
+                                    selectedPayment.icon
+                                        .frame(width: 20)
+                                        .foregroundColor(selectedPayment.color)
+                                    Text("Payment Method")
+                                        .tint(.primary)
+                                    Spacer()
+                                    Text(selectedPayment.rawValue)
                                         .foregroundColor(.secondary)
-                                        .lineLimit(1)
-                                        .truncationMode(.tail)
+                                    Image(systemName: "chevron.right")
+                                        .foregroundColor(.secondary)
                                 }
-                            } else {
-                                Text("Add Location")
-                                    .foregroundColor(Color(uiColor: .placeholderText))
                             }
-                            Spacer()
+                            .sheet(isPresented: $showingPaymentMethodSheet) {
+                                PaymentMethodSelectionSheet(
+                                    selectedMethod: selectedPayment,
+                                    onSelect: { method in
+                                        selectedPayment = method
+                                        showingPaymentMethodSheet = false
+                                    }
+                                )
+                            }
                         }
-                        .contentShape(Rectangle())
-                        .onTapGesture { showingLocationSheet = true }
-                        .sheet(isPresented: $showingLocationSheet) {
-                            LocationSearchView(
-                                selectedLocation: $selectedLocation,
-                                selectedAddress: $selectedAddress,
-                                selectedLatitude: $selectedLatitude,
-                                selectedLongitude: $selectedLongitude
-                            )
-                        }
-                    }
 
-                    Section(header: Text("Date & Time")) {
-                        DatePicker("Date and time", selection: $selectedDate, displayedComponents: [.date, .hourAndMinute])
-                            .datePickerStyle(.graphical)
-                            .padding(.top, -20)
-                            .padding(.bottom, -40)
+                        Section(header: Text("Details")) {
+                            TextField("Title (Optional)", text: $title)
+                                .focused($isTitleFieldFocused)
+                                .onChange(of: isTitleFieldFocused) { focused in
+                                    if focused {
+                                        if !filteredSuggestions.isEmpty && !title.isEmpty {
+                                            withAnimation {
+                                                showSuggestions = true
+                                            }
+                                        }
+                                    } else {
+                                        withAnimation {
+                                            showSuggestions = false
+                                        }
+                                    }
+                                }
+                                .onChange(of: title) { newValue in
+                                    withAnimation {
+                                        showSuggestions = !filteredSuggestions.isEmpty && !newValue.isEmpty
+                                    }
+                                }
+                            
+                            if showSuggestions && !filteredSuggestions.isEmpty {
+                                ScrollView(.horizontal, showsIndicators: false) {
+                                    HStack(spacing: 8) {
+                                        ForEach(filteredSuggestions.prefix(5), id: \.self) { suggestion in
+                                            Button(action: {
+                                                title = suggestion
+                                                withAnimation {
+                                                    showSuggestions = false
+                                                }
+                                            }) {
+                                                Text(suggestion)
+                                                    .padding(.vertical, 6)
+                                                    .padding(.horizontal, 12)
+                                                    .background(
+                                                        RoundedRectangle(cornerRadius: 16)
+                                                            .strokeBorder(Color.accentColor, lineWidth: 1)
+                                                            .background(
+                                                                RoundedRectangle(cornerRadius: 16)
+                                                                    .fill(Color.accentColor.opacity(0.1))
+                                                            )
+                                                    )
+                                            }
+                                            .buttonStyle(.plain)
+                                        }
+                                    }
+                                    .padding(.vertical, 4)
+                                    .padding(.horizontal, 2)
+                                }
+                                .transition(.move(edge: .top).combined(with: .opacity))
+                                .animation(.easeInOut(duration: 0.18), value: showSuggestions)
+                            }
+                        }
+
+                        Section(header: Text("Category")) {
+                            Button { showingCategorySheet = true } label: {
+                                HStack {
+                                    selectedCategory.icon
+                                        .frame(width: 20)
+                                        .foregroundColor(selectedCategory.color)
+                                    Text("Category")
+                                        .tint(.primary)
+                                    Spacer()
+                                    Text(selectedCategory.rawValue)
+                                        .foregroundColor(.secondary)
+                                    Image(systemName: "chevron.right")
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                            .sheet(isPresented: $showingCategorySheet) {
+                                CategorySelectionSheet(
+                                    selectedCategory: selectedCategory,
+                                    onSelect: { category in
+                                        selectedCategory = category
+                                        showingCategorySheet = false
+                                    }
+                                )
+                            }
+                        }
+
+                        Section(header: Text("Location")) {
+                            HStack {
+                                if let location = selectedLocation, let address = selectedAddress,
+                                   !location.isEmpty, !address.isEmpty {
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(location)
+                                            .lineLimit(1)
+                                            .truncationMode(.tail)
+                                        Text(address)
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                            .lineLimit(1)
+                                            .truncationMode(.tail)
+                                    }
+                                } else {
+                                    Text("Add Location")
+                                        .foregroundColor(Color(uiColor: .placeholderText))
+                                }
+                                Spacer()
+                            }
+                            .contentShape(Rectangle())
+                            .onTapGesture { showingLocationSheet = true }
+                            .sheet(isPresented: $showingLocationSheet) {
+                                LocationSearchView(
+                                    selectedLocation: $selectedLocation,
+                                    selectedAddress: $selectedAddress,
+                                    selectedLatitude: $selectedLatitude,
+                                    selectedLongitude: $selectedLongitude
+                                )
+                            }
+                        }
+
+                        Section(header: Text("Date & Time")) {
+                            DatePicker("Date and time", selection: $selectedDate, displayedComponents: [.date, .hourAndMinute])
+                                .datePickerStyle(.graphical)
+                                .padding(.top, -20)
+                                .padding(.bottom, -40)
+                        }
                     }
+                    .scrollDismissesKeyboard(.immediately)
                 }
-                .scrollDismissesKeyboard(.immediately)
             }
             .navigationTitle((!accountantMode || transactionToEdit != nil) ? (transactionToEdit == nil ? "Add Expense" : "Edit Expense") : "Accountant Mode")
             .navigationBarTitleDisplayMode(.inline)
